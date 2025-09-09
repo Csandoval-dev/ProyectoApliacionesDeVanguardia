@@ -1,0 +1,1843 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetGrooming Pro - Sistema Profesional de Gestión</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .screen {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            padding: 30px;
+            animation: fadeIn 0.3s ease-in;
+            margin-bottom: 20px;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn.admin {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .btn.admin:hover {
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn.success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+
+        .btn.warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .btn.danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .user-info {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .cita-card {
+            background: white;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .cita-card:hover {
+            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .cita-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-pendiente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-confirmada {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-completada {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-cancelada {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .chatbot {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            max-height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .chatbot.active {
+            display: block;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chatbot-messages {
+            height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .message.bot {
+            background: #f8f9fa;
+            margin-right: auto;
+        }
+
+        .message.user {
+            background: #3498db;
+            color: white;
+            margin-left: auto;
+        }
+
+        .chatbot-input {
+            display: flex;
+            padding: 15px;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            margin-right: 10px;
+        }
+
+        .chat-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 999;
+        }
+
+        .admin-panel {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+            height: 600px;
+        }
+
+        .admin-sidebar {
+            background: #2c3e50;
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .admin-sidebar ul {
+            list-style: none;
+        }
+
+        .admin-sidebar li {
+            margin-bottom: 10px;
+        }
+
+        .admin-sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .admin-sidebar a:hover, .admin-sidebar a.active {
+            background: #34495e;
+        }
+
+        .admin-content {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-panel {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .chatbot {
+                width: calc(100% - 40px);
+                bottom: 10px;
+                right: 20px;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+            }
+        }
+
+        .pet-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #27ae60;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .pet-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #27ae60;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .service-card {
+            background: white;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .service-card:hover, .service-card.selected {
+            border-color: #3498db;
+            background: #f8f9fa;
+            transform: translateY(-3px);
+        }
+
+        .service-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-day {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .calendar-day:hover, .calendar-day.selected {
+            background: #3498db;
+            color: white;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .time-slot {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .time-slot:hover, .time-slot.selected {
+            background: #3498db;
+            color: white;
+        }
+
+        .time-slot.unavailable {
+            background: #e74c3c;
+            color: white;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .appointment-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #3498db;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .export-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .export-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .export-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .export-icon {
+            font-size: 2.5em;
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+        
+        .service-with-image {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .service-with-image img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-paw"></i> PetGrooming Pro</h1>
+            <p>Sistema Profesional de Gestión de Citas</p>
+        </div>
+
+        <!-- Pantalla de Inicio -->
+        <div id="homeScreen" class="screen active">
+            <div class="nav-buttons">
+                <button class="btn" onclick="showScreen('loginScreen')">Iniciar Sesión</button>
+                <button class="btn" onclick="showScreen('registerScreen')">Registrarse</button>
+                <button class="btn admin" onclick="showScreen('adminLoginScreen')">Admin</button>
+            </div>
+        </div>
+
+        <!-- Login Cliente -->
+        <div id="loginScreen" class="screen">
+            <h2>Iniciar Sesión - Clientes</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Usuario:</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña:</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn">Ingresar</button>
+                <button type="button" class="btn" onclick="showScreen('homeScreen')">Volver</button>
+            </form>
+        </div>
+
+        <!-- Registro Cliente -->
+        <div id="registerScreen" class="screen">
+            <h2>Registro de Cliente</h2>
+            <form id="registerForm">
+                <div class="two-column">
+                    <div class="form-group">
+                        <label>Nombre:</label>
+                        <input type="text" id="regName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Apellido:</label>
+                        <input type="text" id="regLastName" required>
+                    </div>
+                </div>
+                <div class="two-column">
+                    <div class="form-group">
+                        <label>Usuario:</label>
+                        <input type="text" id="regUsername" required>
+                        <div class="error-message" id="usernameError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña:</label>
+                        <input type="password" id="regPassword" required>
+                    </div>
+                </div>
+                <div class="two-column">
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="regEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono:</label>
+                        <input type="tel" id="regPhone" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn success">Registrarse</button>
+                <button type="button" class="btn" onclick="showScreen('homeScreen')">Volver</button>
+            </form>
+        </div>
+
+        <!-- Login Admin -->
+        <div id="adminLoginScreen" class="screen">
+            <h2>Panel Administrativo</h2>
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label>Usuario Admin:</label>
+                    <input type="text" id="adminUsername" value="admin">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña:</label>
+                    <input type="password" id="adminPassword" value="admin123">
+                </div>
+                <button type="submit" class="btn admin">Ingresar Admin</button>
+                <button type="button" class="btn" onclick="showScreen('homeScreen')">Volver</button>
+            </form>
+        </div>
+
+        <!-- Panel Cliente -->
+        <div id="clientDashboard" class="screen">
+            <div class="user-info">
+                <h3>Bienvenido, <span id="clientName"></span>!</h3>
+                <p>Gestiona tus citas y mascotas desde aquí</p>
+                <button class="btn" onclick="logout()">Cerrar Sesión</button>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn" onclick="showClientSection('myPets')">Mis Mascotas</button>
+                <button class="btn" onclick="showClientSection('myAppointments')">Mis Citas</button>
+                <button class="btn success" onclick="showClientSection('newAppointment')">Nueva Cita</button>
+            </div>
+
+            <div id="clientContent"></div>
+        </div>
+
+        <!-- Panel Admin -->
+        <div id="adminDashboard" class="screen">
+            <div class="user-info">
+                <h3>Panel Administrativo</h3>
+                <p>Sistema de gestión completo</p>
+                <button class="btn" onclick="logout()">Cerrar Sesión</button>
+            </div>
+
+            <div class="admin-panel">
+                <div class="admin-sidebar">
+                    <h4>Menú Admin</h4>
+                    <ul>
+                        <li><a href="#" onclick="showAdminSection('allAppointments')" class="active">Todas las Citas</a></li>
+                        <li><a href="#" onclick="showAdminSection('clients')">Clientes</a></li>
+                        <li><a href="#" onclick="showAdminSection('services')">Servicios</a></li>
+                        <li><a href="#" onclick="showAdminSection('schedule')">Horarios</a></li>
+                        <li><a href="#" onclick="showAdminSection('reports')">Reportes</a></li>
+                    </ul>
+                </div>
+                <div class="admin-content" id="adminContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot -->
+    <button class="chat-toggle" onclick="toggleChat()" id="chatToggle"><i class="fas fa-comments"></i></button>
+    <div class="chatbot" id="chatbot">
+        <div class="chatbot-header">
+            <h4><i class="fas fa-robot"></i> AssistGrooming</h4>
+            <button onclick="toggleChat()" style="background: none; border: none; color: white; font-size: 18px;">×</button>
+        </div>
+        <div class="chatbot-messages" id="chatMessages">
+            <div class="message bot">¡Hola! Soy AssistGrooming, tu asistente virtual. ¿En qué puedo ayudarte hoy?</div>
+        </div>
+        <div class="chatbot-input">
+            <input type="text" id="chatInput" placeholder="Escribe tu mensaje..." onkeypress="if(event.key=='Enter') sendMessage()">
+            <button onclick="sendMessage()" class="btn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script>
+        // Base de datos simulada
+        let users = JSON.parse(localStorage.getItem('groomingUsers') || '[]');
+        let appointments = JSON.parse(localStorage.getItem('groomingAppointments') || '[]');
+        let pets = JSON.parse(localStorage.getItem('groomingPets') || '[]');
+        let currentUser = null;
+        let isAdmin = false;
+
+        // Servicios disponibles con imágenes
+        const services = [
+            { id: 1, name: 'Baño Básico', duration: 60, price: 25, image: 'https://placehold.co/300x200/3498db/white?text=Baño+Básico' },
+            { id: 2, name: 'Baño + Corte', duration: 90, price: 40, image: 'https://placehold.co/300x200/2ecc71/white?text=Baño+Corte' },
+            { id: 3, name: 'Corte de Uñas', duration: 30, price: 15, image: 'https://placehold.co/300x200/e74c3c/white?text=Corte+Uñas' },
+            { id: 4, name: 'Limpieza Dental', duration: 45, price: 30, image: 'https://placehold.co/300x200/9b59b6/white?text=Limpieza+Dental' },
+            { id: 5, name: 'Servicio Completo', duration: 120, price: 65, image: 'https://placehold.co/300x200/f39c12/white?text=Servicio+Completo' }
+        ];
+
+        // Inicializar admin por defecto
+        if (users.length === 0) {
+            users.push({
+                id: 1,
+                username: 'admin',
+                password: 'admin123',
+                name: 'Administrador',
+                lastName: 'Sistema',
+                email: 'admin@petgrooming.com',
+                phone: '000-000-0000',
+                isAdmin: true,
+                createdAt: new Date().toISOString()
+            });
+            saveData();
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function saveData() {
+            localStorage.setItem('groomingUsers', JSON.stringify(users));
+            localStorage.setItem('groomingAppointments', JSON.stringify(appointments));
+            localStorage.setItem('groomingPets', JSON.stringify(pets));
+        }
+
+        // Validar nombre de usuario único
+        document.getElementById('regUsername').addEventListener('blur', function() {
+            const username = this.value;
+            const errorDiv = document.getElementById('usernameError');
+            
+            if (users.find(u => u.username === username)) {
+                errorDiv.textContent = 'Este nombre de usuario ya está en uso';
+            } else {
+                errorDiv.textContent = '';
+            }
+        });
+
+        // Login Cliente
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const user = users.find(u => u.username === username && u.password === password && !u.isAdmin);
+            
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                document.getElementById('clientName').textContent = user.name;
+                showScreen('clientDashboard');
+                showClientSection('myPets');
+            } else {
+                alert('Usuario o contraseña incorrectos');
+            }
+        });
+
+        // Login Admin
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+
+            const adminUser = users.find(u => u.username === username && u.password === password && u.isAdmin);
+            
+            if (adminUser) {
+                isAdmin = true;
+                currentUser = adminUser;
+                localStorage.setItem('currentUser', JSON.stringify(adminUser));
+                showScreen('adminDashboard');
+                showAdminSection('allAppointments');
+            } else {
+                alert('Credenciales de administrador incorrectas');
+            }
+        });
+
+        // Registro Cliente
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('regUsername').value;
+            if (users.find(u => u.username === username)) {
+                alert('El usuario ya existe');
+                return;
+            }
+
+            const newUser = {
+                id: Date.now(),
+                username: username,
+                password: document.getElementById('regPassword').value,
+                name: document.getElementById('regName').value,
+                lastName: document.getElementById('regLastName').value,
+                email: document.getElementById('regEmail').value,
+                phone: document.getElementById('regPhone').value,
+                isAdmin: false,
+                createdAt: new Date().toISOString()
+            };
+
+            users.push(newUser);
+            saveData();
+            alert('Registro exitoso. Ya puedes iniciar sesión.');
+            showScreen('loginScreen');
+        });
+
+        function logout() {
+            currentUser = null;
+            isAdmin = false;
+            localStorage.removeItem('currentUser');
+            showScreen('homeScreen');
+        }
+
+        function showClientSection(section) {
+            const content = document.getElementById('clientContent');
+            
+            switch(section) {
+                case 'myPets':
+                    showMyPets();
+                    break;
+                case 'myAppointments':
+                    showMyAppointments();
+                    break;
+                case 'newAppointment':
+                    showNewAppointment();
+                    break;
+            }
+        }
+
+        function showMyPets() {
+            const userPets = pets.filter(p => p.userId === currentUser.id);
+            let html = `
+                <h3><i class="fas fa-paw"></i> Mis Mascotas</h3>
+                <button class="btn success" onclick="showAddPetForm()"><i class="fas fa-plus"></i> Agregar Mascota</button>
+                <div id="petsContainer" style="margin-top: 20px;">
+            `;
+
+            if (userPets.length === 0) {
+                html += `<p>No tienes mascotas registradas.</p>`;
+            } else {
+                userPets.forEach(pet => {
+                    html += `
+                        <div class="pet-card">
+                            <img src="${pet.photo || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23ddd"/><text x="50" y="55" font-family="Arial" font-size="20" text-anchor="middle" fill="%23999">🐕</text></svg>'}" 
+                                 class="pet-photo" alt="${pet.name}">
+                            <div>
+                                <h4>${pet.name}</h4>
+                                <p><strong>Raza:</strong> ${pet.breed}</p>
+                                <p><strong>Tamaño:</strong> ${pet.size}</p>
+                                <p><strong>Observaciones:</strong> ${pet.notes || 'Ninguna'}</p>
+                                <button class="btn warning" onclick="editPet(${pet.id})"><i class="fas fa-edit"></i> Editar</button>
+                                <button class="btn danger" onclick="deletePet(${pet.id})"><i class="fas fa-trash"></i> Eliminar</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += `</div>`;
+            document.getElementById('clientContent').innerHTML = html;
+        }
+
+        function showAddPetForm() {
+            const html = `
+                <h3><i class="fas fa-plus"></i> Agregar Nueva Mascota</h3>
+                <form id="addPetForm">
+                    <div class="two-column">
+                        <div class="form-group">
+                            <label>Nombre:</label>
+                            <input type="text" id="petName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Raza:</label>
+                            <input type="text" id="petBreed" required>
+                        </div>
+                    </div>
+                    <div class="two-column">
+                        <div class="form-group">
+                            <label>Tamaño:</label>
+                            <select id="petSize" required>
+                                <option value="">Seleccionar</option>
+                                <option value="Pequeño">Pequeño</option>
+                                <option value="Mediano">Mediano</option>
+                                <option value="Grande">Grande</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Foto:</label>
+                            <input type="file" id="petPhoto" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Observaciones:</label>
+                        <textarea id="petNotes" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn success"><i class="fas fa-save"></i> Agregar Mascota</button>
+                    <button type="button" class="btn" onclick="showMyPets()"><i class="fas fa-times"></i> Cancelar</button>
+                </form>
+            `;
+
+            document.getElementById('clientContent').innerHTML = html;
+
+            document.getElementById('addPetForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const photoFile = document.getElementById('petPhoto').files[0];
+                let photoData = '';
+
+                if (photoFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        photoData = e.target.result;
+                        savePet(photoData);
+                    };
+                    reader.readAsDataURL(photoFile);
+                } else {
+                    savePet('');
+                }
+            });
+        }
+
+        function savePet(photoData) {
+            const newPet = {
+                id: Date.now(),
+                userId: currentUser.id,
+                name: document.getElementById('petName').value,
+                breed: document.getElementById('petBreed').value,
+                size: document.getElementById('petSize').value,
+                notes: document.getElementById('petNotes').value,
+                photo: photoData,
+                createdAt: new Date().toISOString()
+            };
+
+            pets.push(newPet);
+            saveData();
+            alert('Mascota agregada exitosamente');
+            showMyPets();
+        }
+
+        function editPet(petId) {
+            const pet = pets.find(p => p.id === petId);
+            if (!pet) return;
+            
+            const html = `
+                <h3><i class="fas fa-edit"></i> Editar Mascota</h3>
+                <form id="editPetForm">
+                    <input type="hidden" id="editPetId" value="${pet.id}">
+                    <div class="two-column">
+                        <div class="form-group">
+                            <label>Nombre:</label>
+                            <input type="text" id="editPetName" value="${pet.name}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Raza:</label>
+                            <input type="text" id="editPetBreed" value="${pet.breed}" required>
+                        </div>
+                    </div>
+                    <div class="two-column">
+                        <div class="form-group">
+                            <label>Tamaño:</label>
+                            <select id="editPetSize" required>
+                                <option value="Pequeño" ${pet.size === 'Pequeño' ? 'selected' : ''}>Pequeño</option>
+                                <option value="Mediano" ${pet.size === 'Mediano' ? 'selected' : ''}>Mediano</option>
+                                <option value="Grande" ${pet.size === 'Grande' ? 'selected' : ''}>Grande</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Foto:</label>
+                            <input type="file" id="editPetPhoto" accept="image/*">
+                            ${pet.photo ? `<img src="${pet.photo}" class="pet-photo" style="margin-top: 10px;">` : ''}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Observaciones:</label>
+                        <textarea id="editPetNotes" rows="3">${pet.notes || ''}</textarea>
+                    </div>
+                    <button type="submit" class="btn success"><i class="fas fa-save"></i> Guardar Cambios</button>
+                    <button type="button" class="btn" onclick="showMyPets()"><i class="fas fa-times"></i> Cancelar</button>
+                </form>
+            `;
+
+            document.getElementById('clientContent').innerHTML = html;
+
+            document.getElementById('editPetForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const photoFile = document.getElementById('editPetPhoto').files[0];
+                const petId = parseInt(document.getElementById('editPetId').value);
+                const petIndex = pets.findIndex(p => p.id === petId);
+                
+                if (petIndex === -1) return;
+                
+                if (photoFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        pets[petIndex].photo = e.target.result;
+                        updatePet(petIndex);
+                    };
+                    reader.readAsDataURL(photoFile);
+                } else {
+                    updatePet(petIndex);
+                }
+            });
+        }
+
+        function updatePet(petIndex) {
+            pets[petIndex].name = document.getElementById('editPetName').value;
+            pets[petIndex].breed = document.getElementById('editPetBreed').value;
+            pets[petIndex].size = document.getElementById('editPetSize').value;
+            pets[petIndex].notes = document.getElementById('editPetNotes').value;
+            
+            saveData();
+            alert('Mascota actualizada exitosamente');
+            showMyPets();
+        }
+
+        function deletePet(petId) {
+            if (confirm('¿Estás seguro de que deseas eliminar esta mascota?')) {
+                pets = pets.filter(p => p.id !== petId);
+                saveData();
+                showMyPets();
+            }
+        }
+
+        function showMyAppointments() {
+            const userAppointments = appointments.filter(a => a.userId === currentUser.id);
+            let html = `
+                <h3><i class="fas fa-calendar-check"></i> Mis Citas</h3>
+                <div id="appointmentsContainer" style="margin-top: 20px;">
+            `;
+
+            if (userAppointments.length === 0) {
+                html += `<p>No tienes citas programadas.</p>`;
+            } else {
+                userAppointments.forEach(apt => {
+                    const pet = pets.find(p => p.id === apt.petId);
+                    const service = services.find(s => s.id === apt.serviceId);
+                    
+                    html += `
+                        <div class="cita-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4>${service ? service.name : 'Servicio no disponible'}</h4>
+                                <span class="cita-status status-${apt.status.toLowerCase()}">${apt.status}</span>
+                            </div>
+                            <p><strong>Mascota:</strong> ${pet ? pet.name : 'N/A'}</p>
+                            <p><strong>Fecha:</strong> ${new Date(apt.date).toLocaleDateString()}</p>
+                            <p><strong>Hora:</strong> ${apt.time}</p>
+                            <p><strong>Notas:</strong> ${apt.notes || 'Ninguna'}</p>
+                            <div class="appointment-actions">
+                                ${apt.status === 'Pendiente' ? `
+                                    <button class="btn danger" onclick="cancelAppointment(${apt.id})"><i class="fas fa-times"></i> Cancelar Cita</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += `</div>`;
+            document.getElementById('clientContent').innerHTML = html;
+        }
+
+        function cancelAppointment(appointmentId) {
+            if (confirm('¿Estás seguro de que deseas cancelar esta cita?')) {
+                const aptIndex = appointments.findIndex(a => a.id === appointmentId);
+                if (aptIndex !== -1) {
+                    appointments[aptIndex].status = 'Cancelada';
+                    saveData();
+                    showMyAppointments();
+                }
+            }
+        }
+
+        function showNewAppointment() {
+            const userPets = pets.filter(p => p.userId === currentUser.id);
+            
+            if (userPets.length === 0) {
+                document.getElementById('clientContent').innerHTML = `
+                    <div class="success-message">
+                        <p>Debes registrar al menos una mascota antes de agendar una cita.</p>
+                    </div>
+                    <button class="btn success" onclick="showAddPetForm()"><i class="fas fa-plus"></i> Agregar Mascota</button>
+                `;
+                return;
+            }
+
+            let html = `
+                <h3><i class="fas fa-calendar-plus"></i> Nueva Cita</h3>
+                <form id="newAppointmentForm">
+                    <div class="form-group">
+                        <label>Selecciona una mascota:</label>
+                        <select id="appointmentPet" required>
+                            <option value="">Seleccionar mascota</option>
+                            ${userPets.map(pet => `<option value="${pet.id}">${pet.name} (${pet.breed})</option>`).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Selecciona un servicio:</label>
+                        <div class="services-grid">
+            `;
+
+            services.forEach(service => {
+                html += `
+                    <div class="service-card" data-id="${service.id}">
+                        <img src="${service.image}" class="service-image" alt="${service.name}">
+                        <h4>${service.name}</h4>
+                        <p>Duración: ${service.duration} min</p>
+                        <p><strong>Precio: $${service.price}</strong></p>
+                    </div>
+                `;
+            });
+
+            html += `
+                        </div>
+                        <input type="hidden" id="appointmentService" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Selecciona una fecha:</label>
+                        <input type="date" id="appointmentDate" min="${new Date().toISOString().split('T')[0]}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Selecciona un horario:</label>
+                        <div id="timeSlotsContainer"></div>
+                        <input type="hidden" id="appointmentTime" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notas adicionales:</label>
+                        <textarea id="appointmentNotes" rows="3"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn success"><i class="fas fa-calendar-check"></i> Agendar Cita</button>
+                    <button type="button" class="btn" onclick="showClientSection('myAppointments')"><i class="fas fa-times"></i> Cancelar</button>
+                </form>
+            `;
+
+            document.getElementById('clientContent').innerHTML = html;
+
+            // Seleccionar servicio
+            document.querySelectorAll('.service-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    document.getElementById('appointmentService').value = this.dataset.id;
+                });
+            });
+
+            // Cargar horarios disponibles cuando se selecciona fecha
+            document.getElementById('appointmentDate').addEventListener('change', function() {
+                loadAvailableTimeSlots(this.value);
+            });
+
+            // Enviar formulario
+            document.getElementById('newAppointmentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const serviceId = parseInt(document.getElementById('appointmentService').value);
+                if (!serviceId) {
+                    alert('Por favor selecciona un servicio');
+                    return;
+                }
+                
+                const time = document.getElementById('appointmentTime').value;
+                if (!time) {
+                    alert('Por favor selecciona un horario');
+                    return;
+                }
+                
+                const newAppointment = {
+                    id: Date.now(),
+                    userId: currentUser.id,
+                    petId: parseInt(document.getElementById('appointmentPet').value),
+                    serviceId: serviceId,
+                    date: document.getElementById('appointmentDate').value,
+                    time: time,
+                    notes: document.getElementById('appointmentNotes').value,
+                    status: 'Pendiente',
+                    createdAt: new Date().toISOString()
+                };
+                
+                appointments.push(newAppointment);
+                saveData();
+                alert('Cita agendada exitosamente');
+                showClientSection('myAppointments');
+            });
+        }
+
+        function loadAvailableTimeSlots(date) {
+            const container = document.getElementById('timeSlotsContainer');
+            container.innerHTML = '<p>Cargando horarios disponibles...</p>';
+            
+            // Simular carga
+            setTimeout(() => {
+                // Horarios disponibles (en una app real, se verificarían contra las citas existentes)
+                const availableSlots = ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'];
+                
+                let html = '<div class="time-slots">';
+                availableSlots.forEach(slot => {
+                    html += `<div class="time-slot" data-time="${slot}">${slot}</div>`;
+                });
+                html += '</div>';
+                
+                container.innerHTML = html;
+                
+                // Seleccionar horario
+                document.querySelectorAll('.time-slot').forEach(slot => {
+                    slot.addEventListener('click', function() {
+                        document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                        this.classList.add('selected');
+                        document.getElementById('appointmentTime').value = this.dataset.time;
+                    });
+                });
+            }, 500);
+        }
+
+        function showAdminSection(section) {
+            const content = document.getElementById('adminContent');
+            
+            switch(section) {
+                case 'allAppointments':
+                    showAllAppointments();
+                    break;
+                case 'clients':
+                    showClients();
+                    break;
+                case 'services':
+                    showServices();
+                    break;
+                case 'schedule':
+                    showSchedule();
+                    break;
+                case 'reports':
+                    showReports();
+                    break;
+            }
+            
+            // Actualizar menú activo
+            document.querySelectorAll('.admin-sidebar a').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function showAllAppointments() {
+            let html = `
+                <h3><i class="fas fa-calendar-alt"></i> Todas las Citas</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Citas</div>
+                        <div class="stat-value">${appointments.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pendientes</div>
+                        <div class="stat-value">${appointments.filter(a => a.status === 'Pendiente').length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Confirmadas</div>
+                        <div class="stat-value">${appointments.filter(a => a.status === 'Confirmada').length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Completadas</div>
+                        <div class="stat-value">${appointments.filter(a => a.status === 'Completada').length}</div>
+                    </div>
+                </div>
+                <div id="appointmentsList">
+            `;
+
+            if (appointments.length === 0) {
+                html += `<p>No hay citas programadas.</p>`;
+            } else {
+                // Ordenar citas por fecha (más recientes primero)
+                const sortedAppointments = [...appointments].sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                sortedAppointments.forEach(apt => {
+                    const user = users.find(u => u.id === apt.userId);
+                    const pet = pets.find(p => p.id === apt.petId);
+                    const service = services.find(s => s.id === apt.serviceId);
+                    
+                    html += `
+                        <div class="cita-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4>${user ? user.name + ' ' + user.lastName : 'Cliente no disponible'}</h4>
+                                <span class="cita-status status-${apt.status.toLowerCase()}">${apt.status}</span>
+                            </div>
+                            <p><strong>Servicio:</strong> ${service ? service.name : 'N/A'}</p>
+                            <p><strong>Mascota:</strong> ${pet ? pet.name : 'N/A'}</p>
+                            <p><strong>Fecha:</strong> ${new Date(apt.date).toLocaleDateString()}</p>
+                            <p><strong>Hora:</strong> ${apt.time}</p>
+                            <p><strong>Notas:</strong> ${apt.notes || 'Ninguna'}</p>
+                            <div class="appointment-actions">
+                                <select id="status-${apt.id}" onchange="updateAppointmentStatus(${apt.id}, this.value)">
+                                    <option value="Pendiente" ${apt.status === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                                    <option value="Confirmada" ${apt.status === 'Confirmada' ? 'selected' : ''}>Confirmada</option>
+                                    <option value="Completada" ${apt.status === 'Completada' ? 'selected' : ''}>Completada</option>
+                                    <option value="Cancelada" ${apt.status === 'Cancelada' ? 'selected' : ''}>Cancelada</option>
+                                </select>
+                                <button class="btn danger" onclick="deleteAppointment(${apt.id})"><i class="fas fa-trash"></i> Eliminar</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += `</div>`;
+            document.getElementById('adminContent').innerHTML = html;
+        }
+
+        function updateAppointmentStatus(appointmentId, status) {
+            const aptIndex = appointments.findIndex(a => a.id === appointmentId);
+            if (aptIndex !== -1) {
+                appointments[aptIndex].status = status;
+                saveData();
+                showAllAppointments();
+            }
+        }
+
+        function deleteAppointment(appointmentId) {
+            if (confirm('¿Estás seguro de que deseas eliminar esta cita?')) {
+                appointments = appointments.filter(a => a.id !== appointmentId);
+                saveData();
+                showAllAppointments();
+            }
+        }
+
+        function showClients() {
+            const clientUsers = users.filter(u => !u.isAdmin);
+            
+            let html = `
+                <h3><i class="fas fa-users"></i> Gestión de Clientes</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Clientes</div>
+                        <div class="stat-value">${clientUsers.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Mascotas Registradas</div>
+                        <div class="stat-value">${pets.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Citas Activas</div>
+                        <div class="stat-value">${appointments.filter(a => a.status === 'Pendiente' || a.status === 'Confirmada').length}</div>
+                    </div>
+                </div>
+                <div id="clientsList">
+            `;
+
+            if (clientUsers.length === 0) {
+                html += `<p>No hay clientes registrados.</p>`;
+            } else {
+                clientUsers.forEach(user => {
+                    const userPets = pets.filter(p => p.userId === user.id);
+                    const userAppointments = appointments.filter(a => a.userId === user.id);
+                    
+                    html += `
+                        <div class="cita-card">
+                            <h4>${user.name} ${user.lastName}</h4>
+                            <p><strong>Usuario:</strong> ${user.username}</p>
+                            <p><strong>Email:</strong> ${user.email}</p>
+                            <p><strong>Teléfono:</strong> ${user.phone}</p>
+                            <p><strong>Mascotas:</strong> ${userPets.length}</p>
+                            <p><strong>Citas:</strong> ${userAppointments.length}</p>
+                            <div class="appointment-actions">
+                                <button class="btn" onclick="viewClientDetails(${user.id})"><i class="fas fa-eye"></i> Ver Detalles</button>
+                                <button class="btn danger" onclick="deleteClient(${user.id})"><i class="fas fa-trash"></i> Eliminar</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += `</div>`;
+            document.getElementById('adminContent').innerHTML = html;
+        }
+
+        function viewClientDetails(userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+            
+            const userPets = pets.filter(p => p.userId === user.id);
+            const userAppointments = appointments.filter(a => a.userId === user.id);
+            
+            let html = `
+                <h3><i class="fas fa-user"></i> Detalles del Cliente</h3>
+                <div class="user-info">
+                    <h4>${user.name} ${user.lastName}</h4>
+                    <p><strong>Usuario:</strong> ${user.username}</p>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Teléfono:</strong> ${user.phone}</p>
+                    <p><strong>Fecha de registro:</strong> ${new Date(user.createdAt).toLocaleDateString()}</p>
+                </div>
+                
+                <h4 style="margin-top: 20px;"><i class="fas fa-paw"></i> Mascotas</h4>
+            `;
+            
+            if (userPets.length === 0) {
+                html += `<p>Este cliente no tiene mascotas registradas.</p>`;
+            } else {
+                userPets.forEach(pet => {
+                    html += `
+                        <div class="pet-card">
+                            <img src="${pet.photo || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23ddd"/><text x="50" y="55" font-family="Arial" font-size="20" text-anchor="middle" fill="%23999">🐕</text></svg>'}" 
+                                 class="pet-photo" alt="${pet.name}">
+                            <div>
+                                <h4>${pet.name}</h4>
+                                <p><strong>Raza:</strong> ${pet.breed}</p>
+                                <p><strong>Tamaño:</strong> ${pet.size}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `
+                <h4 style="margin-top: 20px;"><i class="fas fa-calendar-alt"></i> Historial de Citas</h4>
+            `;
+            
+            if (userAppointments.length === 0) {
+                html += `<p>Este cliente no tiene citas registradas.</p>`;
+            } else {
+                userAppointments.forEach(apt => {
+                    const pet = pets.find(p => p.id === apt.petId);
+                    const service = services.find(s => s.id === apt.serviceId);
+                    
+                    html += `
+                        <div class="cita-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4>${service ? service.name : 'Servicio no disponible'}</h4>
+                                <span class="cita-status status-${apt.status.toLowerCase()}">${apt.status}</span>
+                            </div>
+                            <p><strong>Mascota:</strong> ${pet ? pet.name : 'N/A'}</p>
+                            <p><strong>Fecha:</strong> ${new Date(apt.date).toLocaleDateString()}</p>
+                            <p><strong>Hora:</strong> ${apt.time}</p>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `<button class="btn" onclick="showClients()"><i class="fas fa-arrow-left"></i> Volver</button>`;
+            
+            document.getElementById('adminContent').innerHTML = html;
+        }
+
+        function deleteClient(userId) {
+            if (confirm('¿Estás seguro de que deseas eliminar este cliente y todos sus datos?')) {
+                users = users.filter(u => u.id !== userId);
+                pets = pets.filter(p => p.userId !== userId);
+                appointments = appointments.filter(a => a.userId !== userId);
+                saveData();
+                showClients();
+            }
+        }
+
+        function showServices() {
+            let html = `
+                <h3><i class="fas fa-concierge-bell"></i> Gestión de Servicios</h3>
+                <button class="btn success" onclick="showAddServiceForm()"><i class="fas fa-plus"></i> Agregar Servicio</button>
+                <div class="services-grid" style="margin-top: 20px;">
+            `;
+
+            services.forEach(service => {
+                html += `
+                    <div class="service-card">
+                        <img src="${service.image}" class="service-image" alt="${service.name}">
+                        <h4>${service.name}</h4>
+                        <p>Duración: ${service.duration} min</p>
+                        <p><strong>Precio: $${service.price}</strong></p>
+                        <div class="appointment-actions">
+                            <button class="btn warning" onclick="editService(${service.id})"><i class="fas fa-edit"></i> Editar</button>
+                            <button class="btn danger" onclick="deleteService(${service.id})"><i class="fas fa-trash"></i> Eliminar</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            document.getElementById('adminContent').innerHTML = html;
+        }
+
+        function showAddServiceForm() {
+            const html = `
+                <h3><i class="fas fa-plus"></i> Agregar Nuevo Servicio</h3>
+                <form id="addServiceForm">
+                    <div class="form-group">
+                        <label>Nombre del servicio:</label>
+                        <input type="text" id="serviceName" required>
+                    </div>
+                    <div class="two-column">
+                        <div class="form-group">
+                            <label>Duración (minutos):</label>
+                            <input type="number" id="serviceDuration" min="15" step="15" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Precio Lps:</label>
+                            <input type="number" id="servicePrice" min="0" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Imagen del servicio (URL):</label>
+                        <input type="text" id="serviceImage" placeholder="https://...">
+                    </div>
+                    <button type="submit" class="btn success"><i class="fas fa-save"></i> Agregar Servicio</button>
+                    <button type="button" class="btn" onclick="showServices()"><i class="fas fa-times"></i> Cancelar</button>
+                </form>
+            `;
+
+            document.getElementById('adminContent').innerHTML = html;
+
+            document.getElementById('addServiceForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const newService = {
+                    id: Date.now(),
+                    name: document.getElementById('serviceName').value,
+                    duration: parseInt(document.getElementById('serviceDuration').value),
+                    price: parseFloat(document.getElementById('servicePrice').value),
+                    image: document.getElementById('serviceImage').value || 'https://placehold.co/300x200/3498db/white?text=Servicio'
+                };
+
+                services.push(newService);
+                saveData();
+                alert('Servicio agregado exitosamente');
+                showServices();
+            });
+        }
+
+        function editService(serviceId) {
+            const service = services.find(s => s.id === serviceId);
+            if (!service) return;
+            
+            const html = `
+                <h3><i class="fas fa-edit"></i> Editar Servicio</h3>
+                <form id="editServiceForm">
+                    <input type="hidden" id="editServiceId" value="${service.id}">
+                    <div class="form-group">
+                        <label>Nombre del servicio:</label>
+                        <input type="text" id="editServiceName" value="${service.name}" required>
+                    </div>
+                    <div class="two-column">
+                        <div class="form-group">
+                            <label>Duración (minutos):</label>
+                            <input type="number" id="editServiceDuration" value="${service.duration}" min="15" step="15" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Precio Lps:</label>
+                            <input type="number" id="editServicePrice" value="${service.price}" min="0" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Imagen del servicio (URL):</label>
+                        <input type="text" id="editServiceImage" value="${service.image}">
+                    </div>
+                    <button type="submit" class="btn success"><i class="fas fa-save"></i> Guardar Cambios</button>
+                    <button type="button" class="btn" onclick="showServices()"><i class="fas fa-times"></i> Cancelar</button>
+                </form>
+            `;
+
+            document.getElementById('adminContent').innerHTML = html;
+
+            document.getElementById('editServiceForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const serviceId = parseInt(document.getElementById('editServiceId').value);
+                const serviceIndex = services.findIndex(s => s.id === serviceId);
+                
+                if (serviceIndex === -1) return;
+                
+                services[serviceIndex].name = document.getElementById('editServiceName').value;
+                services[serviceIndex].duration = parseInt(document.getElementById('editServiceDuration').value);
+                services[serviceIndex].price = parseFloat(document.getElementById('editServicePrice').value);
+                services[serviceIndex].image = document.getElementById('editServiceImage').value;
+                
+                saveData();
+                alert('Servicio actualizado exitosamente');
+                showServices();
+            });
+        }
+
+        function deleteService(serviceId) {
+            if (confirm('¿Estás seguro de que deseas eliminar este servicio?')) {
+                // Verificar si hay citas asociadas a este servicio
+                const serviceAppointments = appointments.filter(a => a.serviceId === serviceId);
+                
+                if (serviceAppointments.length > 0) {
+                    alert('No se puede eliminar este servicio porque tiene citas asociadas.');
+                    return;
+                }
+                
+                services = services.filter(s => s.id !== serviceId);
+                saveData();
+                showServices();
+            }
+        }
+
+        function showSchedule() {
+            let html = `
+                <h3><i class="fas fa-clock"></i> Gestión de Horarios</h3>
+                <p>Configura los horarios disponibles para las citas.</p>
+                
+                <div class="form-group">
+                    <label>Selecciona un día de la semana:</label>
+                    <select id="scheduleDay">
+                        <option value="1">Lunes</option>
+                        <option value="2">Martes</option>
+                        <option value="3">Miércoles</option>
+                        <option value="4">Jueves</option>
+                        <option value="5">Viernes</option>
+                        <option value="6">Sábado</option>
+                        <option value="0">Domingo</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Horarios disponibles:</label>
+                    <div id="timeSlotsManager"></div>
+                    <button class="btn success" onclick="addTimeSlot()"><i class="fas fa-plus"></i> Agregar Horario</button>
+                </div>
+                
+                <button class="btn success" onclick="saveSchedule()"><i class="fas fa-save"></i> Guardar Horarios</button>
+            `;
+
+            document.getElementById('adminContent').innerHTML = html;
+        }
+
+        function addTimeSlot() {
+            const container = document.getElementById('timeSlotsManager');
+            const timeSlotHtml = `
+                <div class="time-slot-input" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="time" class="time-input">
+                    <button class="btn danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', timeSlotHtml);
+        }
+
+        function saveSchedule() {
+            alert('Horarios guardados exitosamente (en una aplicación real, esto guardaría en la base de datos)');
+        }
+
+        function showReports() {
+            let html = `
+                <h3><i class="fas fa-chart-bar"></i> Reportes y Exportaciones</h3>
+                <p>Genera reportes y exporta datos del sistema.</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Citas este Mes</div>
+                        <div class="stat-value">${appointments.filter(a => new Date(a.date).getMonth() === new Date().getMonth()).length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Ingresos este Mes</div>
+                        <div class="stat-value">$${calculateMonthlyRevenue()}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Clientes Nuevos</div>
+                        <div class="stat-value">${users.filter(u => !u.isAdmin && new Date(u.createdAt).getMonth() === new Date().getMonth()).length}</div>
+                    </div>
+                </div>
+                
+                <h4 style="margin-top: 30px;">Exportar Datos</h4>
+                <div class="export-options">
+                    <div class="export-card" onclick="exportData('citas')">
+                        <div class="export-icon"><i class="fas fa-calendar-alt"></i></div>
+                        <h4>Citas</h4>
+                        <p>Exportar todas las citas a Excel</p>
+                    </div>
+                    <div class="export-card" onclick="exportData('clientes')">
+                        <div class="export-icon"><i class="fas fa-users"></i></div>
+                        <h4>Clientes</h4>
+                        <p>Exportar información de clientes</p>
+                    </div>
+                    <div class="export-card" onclick="exportData('servicios')">
+                        <div class="export-icon"><i class="fas fa-concierge-bell"></i></div>
+                        <h4>Servicios</h4>
+                        <p>Exportar servicios y precios</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('adminContent').innerHTML = html;
+        }
+
+        function calculateMonthlyRevenue() {
+            const monthlyAppointments = appointments.filter(a => 
+                new Date(a.date).getMonth() === new Date().getMonth() &&
+                (a.status === 'Completada' || a.status === 'Confirmada')
+            );
+            
+            let revenue = 0;
+            monthlyAppointments.forEach(apt => {
+                const service = services.find(s => s.id === apt.serviceId);
+                if (service) {
+                    revenue += service.price;
+                }
+            });
+            
+            return revenue.toFixed(2);
+        }
+
+        function exportData(type) {
+            let data = [];
+            let fileName = '';
+            
+            switch(type) {
+                case 'citas':
+                    data = appointments.map(apt => {
+                        const user = users.find(u => u.id === apt.userId);
+                        const pet = pets.find(p => p.id === apt.petId);
+                        const service = services.find(s => s.id === apt.serviceId);
+                        
+                        return {
+                            'ID': apt.id,
+                            'Cliente': user ? `${user.name} ${user.lastName}` : 'N/A',
+                            'Mascota': pet ? pet.name : 'N/A',
+                            'Servicio': service ? service.name : 'N/A',
+                            'Fecha': new Date(apt.date).toLocaleDateString(),
+                            'Hora': apt.time,
+                            'Estado': apt.status,
+                            'Notas': apt.notes || 'Ninguna',
+                            'Fecha Creación': new Date(apt.createdAt).toLocaleDateString()
+                        };
+                    });
+                    fileName = 'citas_petgrooming.xlsx';
+                    break;
+                    
+                case 'clientes':
+                    data = users.filter(u => !u.isAdmin).map(user => {
+                        const userPets = pets.filter(p => p.userId === user.id);
+                        const userAppointments = appointments.filter(a => a.userId === user.id);
+                        
+                        return {
+                            'ID': user.id,
+                            'Nombre': user.name,
+                            'Apellido': user.lastName,
+                            'Usuario': user.username,
+                            'Email': user.email,
+                            'Teléfono': user.phone,
+                            'Mascotas': userPets.length,
+                            'Citas': userAppointments.length,
+                            'Fecha Registro': new Date(user.createdAt).toLocaleDateString()
+                        };
+                    });
+                    fileName = 'clientes_petgrooming.xlsx';
+                    break;
+                    
+                case 'servicios':
+                    data = services.map(service => {
+                        const serviceAppointments = appointments.filter(a => a.serviceId === service.id);
+                        
+                        return {
+                            'ID': service.id,
+                            'Nombre': service.name,
+                            'Duración (min)': service.duration,
+                            'Precio': `$${service.price}`,
+                            'Citas Realizadas': serviceAppointments.length,
+                            'Imagen': service.image
+                        };
+                    });
+                    fileName = 'servicios_petgrooming.xlsx';
+                    break;
+            }
+            
+            if (data.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+            
+            // Crear libro de Excel
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Datos');
+            
+            // Exportar
+            XLSX.writeFile(wb, fileName);
+            alert(`Datos exportados exitosamente en ${fileName}`);
+        }
+
+        // Chatbot functions
+        function toggleChat() {
+            const chatbot = document.getElementById('chatbot');
+            chatbot.classList.toggle('active');
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (message === '') return;
+            
+            // Agregar mensaje del usuario
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Simular respuesta del bot después de un breve retraso
+            setTimeout(() => {
+                let response = '';
+                
+                if (message.toLowerCase().includes('hola') || message.toLowerCase().includes('buenos días')) {
+                    response = '¡Hola! Bienvenido a PetGrooming Pro. ¿En qué puedo ayudarte hoy?';
+                } else if (message.toLowerCase().includes('cita') || message.toLowerCase().includes('agendar')) {
+                    response = 'Para agendar una cita, ve a la sección "Nueva Cita" en tu panel de cliente. ¿Necesitas ayuda con algo más?';
+                } else if (message.toLowerCase().includes('servicio') || message.toLowerCase().includes('precio')) {
+                    response = 'Ofrecemos varios servicios: baño básico ($25), baño + corte ($40), corte de uñas ($15), limpieza dental ($30) y servicio completo ($65).';
+                } else if (message.toLowerCase().includes('horario') || message.toLowerCase().includes('horario')) {
+                    response = 'Nuestro horario de atención es de lunes a sábado de 9:00 AM a 6:00 PM.';
+                } else if (message.toLowerCase().includes('cancelar')) {
+                    response = 'Para cancelar una cita, ve a "Mis Citas" y selecciona la opción de cancelar. ¿Hay algo más en lo que pueda ayudarte?';
+                } else {
+                    response = 'Lo siento, no entendí tu pregunta. Puedo ayudarte con información sobre servicios, horarios, citas y precios.';
+                }
+                
+                addMessage(response, 'bot');
+            }, 1000);
+        }
+
+        function addMessage(text, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender);
+            messageDiv.textContent = text;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar si hay un usuario logueado
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                isAdmin = currentUser.isAdmin;
+                
+                if (isAdmin) {
+                    showScreen('adminDashboard');
+                    showAdminSection('allAppointments');
+                } else {
+                    document.getElementById('clientName').textContent = currentUser.name;
+                    showScreen('clientDashboard');
+                    showClientSection('myPets');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

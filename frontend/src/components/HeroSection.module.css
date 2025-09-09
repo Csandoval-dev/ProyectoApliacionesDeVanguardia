@@ -1,0 +1,316 @@
+.hero {
+  position: relative;
+  min-height: 90vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 2rem;
+  overflow: hidden;
+  background-color: #f0f7ff;
+}
+
+.waveBg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23e3f2fd' fill-opacity='1' d='M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,165.3C672,171,768,213,864,213.3C960,213,1056,171,1152,144C1248,117,1344,107,1392,101.3L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+
+.heroContent {
+  display: flex;
+  max-width: 1200px;
+  width: 100%;
+  z-index: 1;
+  position: relative;
+}
+
+.textContent {
+  flex: 1;
+  padding-right: 2rem;
+}
+
+.badge {
+  display: inline-block;
+  background-color: #e3f2fd;
+  color: #1565c0;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 6px rgba(21, 101, 192, 0.1);
+}
+
+.textContent h1 {
+  font-size: 3rem;
+  color: #1565c0;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+
+.textContent p {
+  font-size: 1.2rem;
+  color: #555;
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.featureItem i {
+  color: #4caf50;
+  font-size: 1.2rem;
+}
+
+.featureItem span {
+  color: #555;
+  font-size: 1.1rem;
+}
+
+.cta {
+  display: flex;
+  gap: 1rem;
+}
+
+.primaryBtn {
+  background: linear-gradient(45deg, #1565c0, #1976d2);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  box-shadow: 0 8px 15px rgba(21, 101, 192, 0.3);
+}
+
+.primaryBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 20px rgba(21, 101, 192, 0.4);
+}
+
+.secondaryBtn {
+  background-color: transparent;
+  color: #1565c0;
+  border: 2px solid #1565c0;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.secondaryBtn:hover {
+  background-color: rgba(21, 101, 192, 0.1);
+  transform: translateY(-3px);
+}
+
+.heroImageContainer {
+  flex: 1;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.imageWrapper {
+  position: relative;
+  width: 90%;
+  z-index: 2;
+}
+
+.heroImage {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.15);
+  object-fit: cover;
+  max-height: 500px;
+}
+
+.imageDecorator {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: #bbdefb;
+  top: 30px;
+  left: 30px;
+  border-radius: 20px;
+  z-index: -1;
+}
+
+.floatingCard {
+  position: absolute;
+  bottom: 30px;
+  left: 0;
+  background-color: white;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 3;
+  animation: float 3s ease-in-out infinite;
+}
+
+.floatingCardAlt {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background-color: white;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 3;
+  animation: float 3s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.cardIcon {
+  width: 40px;
+  height: 40px;
+  background-color: #e3f2fd;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #1565c0;
+  font-size: 1.2rem;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.cardTitle {
+  font-size: 0.8rem;
+  color: #777;
+}
+
+.cardValue {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1565c0;
+}
+
+/* Estilos responsivos */
+@media (max-width: 992px) {
+  .heroContent {
+    flex-direction: column;
+  }
+  
+  .textContent {
+    padding-right: 0;
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  
+  .features {
+    align-items: center;
+  }
+  
+  .cta {
+    justify-content: center;
+  }
+  
+  .textContent h1 {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 3rem 1.5rem;
+  }
+  
+  .textContent h1 {
+    font-size: 2rem;
+  }
+  
+  .textContent p {
+    font-size: 1.1rem;
+  }
+  
+  .cta {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  
+  .floatingCard, .floatingCardAlt {
+    display: none;
+  }
+  
+  .imageDecorator {
+    top: 15px;
+    left: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 2rem 1rem;
+  }
+  
+  .badge {
+    font-size: 0.8rem;
+  }
+  
+  .textContent h1 {
+    font-size: 1.8rem;
+  }
+  
+  .textContent p {
+    font-size: 1rem;
+  }
+  
+  .featureItem span {
+    font-size: 1rem;
+  }
+  
+  .primaryBtn, .secondaryBtn {
+    font-size: 1rem;
+    padding: 0.8rem 1.5rem;
+  }
+}
