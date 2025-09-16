@@ -202,7 +202,7 @@ const getMyCitas = async (req, res) => {
         console.log('Usuario:', id_usuario);
         
         const { usuario, medico } = await getMedicoFromUser(id_usuario);
-        const id_medico = medico.id_medico; // Usar el id_medico real
+        const id_medico = medico.id_medico; 
         
         // Construir query dinámico
         let query = `
@@ -278,7 +278,7 @@ const updateCitaStatus = async (req, res) => {
         console.log('Cita ID:', id_cita, 'Nuevo estado:', estado);
         
         // Validar estado
-        const estadosValidos = ['PENDIENTE', 'CONFIRMADA', 'COMPLETADA', 'CANCELADA'];
+        const estadosValidos = ['pendiente', 'confirmada', 'completada', 'cancelada'];
         if (!estadosValidos.includes(estado?.toUpperCase())) {
             return res.status(400).json({ 
                 message: 'Estado no válido',
@@ -287,7 +287,7 @@ const updateCitaStatus = async (req, res) => {
         }
         
         const { usuario, medico } = await getMedicoFromUser(id_usuario);
-        const id_medico = medico.id_medico; // Usar el id_medico real
+        const id_medico = medico.id_medico; 
         
         // Verificar que la cita pertenece al médico
         const citaResult = await db.query(`
@@ -306,7 +306,7 @@ const updateCitaStatus = async (req, res) => {
         const citaAnterior = citaResult.rows[0];
         
         // Validar transición de estado
-        if (citaAnterior.estado === 'COMPLETADA' && estado !== 'COMPLETADA') {
+        if (citaAnterior.estado === 'completada' && estado !== 'completada') {
             return res.status(400).json({ 
                 message: 'No se puede cambiar el estado de una cita completada' 
             });
@@ -405,7 +405,7 @@ const reprogramarCita = async (req, res) => {
         const citaAnterior = citaResult.rows[0];
         
         // Validar que no sea una cita completada
-        if (citaAnterior.estado === 'COMPLETADA') {
+        if (citaAnterior.estado === 'completada') {
             return res.status(400).json({ 
                 message: 'No se puede reprogramar una cita completada' 
             });
@@ -417,7 +417,7 @@ const reprogramarCita = async (req, res) => {
             WHERE id_medico = $1 
             AND fecha_hora = $2 
             AND id_cita != $3 
-            AND estado NOT IN ('CANCELADA')
+            AND estado NOT IN ('cancelada')
         `, [id_medico, nueva_fecha_hora, id_cita]);
         
         if (conflictoResult.rows.length > 0) {
@@ -430,7 +430,7 @@ const reprogramarCita = async (req, res) => {
         // Actualizar la cita
         const updateResult = await db.query(
             'UPDATE cita SET fecha_hora = $1, estado = $2 WHERE id_cita = $3 RETURNING *',
-            [nueva_fecha_hora, 'PENDIENTE', id_cita]
+            [nueva_fecha_hora, 'pendiente', id_cita]
         );
         
         const citaReprogramada = updateResult.rows[0];
@@ -492,8 +492,8 @@ const enviarNotificacionCita = async (paciente, cita, nuevoEstado, motivo = '') 
         });
         
         switch (nuevoEstado) {
-            case 'CONFIRMADA':
-                asunto = '✅ Cita Médica Confirmada - Health Connect';
+            case 'confirmada':
+                asunto = ' Cita Médica Confirmada - Medic Connect';
                 mensaje = `Estimado/a ${paciente.nombre},
 
 Su cita médica ha sido CONFIRMADA para el ${fechaFormateada}.
@@ -501,11 +501,11 @@ Su cita médica ha sido CONFIRMADA para el ${fechaFormateada}.
 Por favor, llegue puntual a su cita.
 
 Saludos cordiales,
-Health Connect Team`;
+Medic Connect Team`;
                 break;
                 
-            case 'CANCELADA':
-                asunto = '❌ Cita Médica Cancelada - Health Connect';
+            case 'cancelada':
+                asunto = ' Cita Médica Cancelada - Medic Connect';
                 mensaje = `Estimado/a ${paciente.nombre},
 
 Lamentamos informarle que su cita médica del ${fechaFormateada} ha sido CANCELADA.
@@ -517,10 +517,10 @@ Por favor, contacte con la clínica para reprogramar su cita.
 Disculpe las molestias ocasionadas.
 
 Saludos cordiales,
-Health Connect Team`;
+Medic Connect Team`;
                 break;
                 
-            case 'COMPLETADA':
+            case 'completada':
                 asunto = '✅ Cita Médica Completada - Health Connect';
                 mensaje = `Estimado/a ${paciente.nombre},
 
@@ -541,11 +541,11 @@ El estado de su cita del ${fechaFormateada} ha sido actualizado a: ${nuevoEstado
 Para más información, contacte con la clínica.
 
 Saludos cordiales,
-Health Connect Team`;
+MEdic Connect Team`;
         }
         
         const info = await transporter.sendMail({
-            from: '"Health Connect" <noreply@healthconnect.com>',
+            from: '"Medic Connect" <noreply@healthconnect.com>',
             to: paciente.email,
             subject: asunto,
             text: mensaje,
@@ -558,7 +558,7 @@ Health Connect Team`;
                         <p>${mensaje.replace(/\n/g, '<br>')}</p>
                     </div>
                     <div style="background: #374151; padding: 10px; border-radius: 0 0 10px 10px; text-align: center; font-size: 12px; color: #9ca3af;">
-                        © 2024 Health Connect. Todos los derechos reservados.
+                        © 2025 Medic Connect. Todos los derechos reservados.
                     </div>
                 </div>
             `
@@ -609,12 +609,12 @@ ${motivo ? `Motivo: ${motivo}` : 'No se especificó motivo para la reprogramaci�
 Por favor, tome nota de la nueva fecha y hora.
 
 Saludos cordiales,
-Health Connect Team`;
+Medic Connect Team`;
         
         const info = await transporter.sendMail({
-            from: '"Health Connect" <noreply@healthconnect.com>',
+            from: '"Medic Connect" <noreply@healthconnect.com>',
             to: paciente.email,
-            subject: '🔄 Cita Médica Reprogramada - Health Connect',
+            subject: '🔄 Cita Médica Reprogramada - Medic Connect',
             text: mensaje,
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

@@ -10,6 +10,7 @@
       <AdminDashboard v-else-if="currentRoute === '/admin-dashboard'" />
       <ClinicAdminDashboard v-else-if="currentRoute === '/clinic-admin-dashboard'" />
       <DoctorDashboard v-else-if="currentRoute === '/doctor-dashboard'" />
+      <PatientDashboard v-else-if="currentRoute === '/patient-dashboard'" />
       
       <!-- Fallback para rutas no encontradas -->
       <div v-else class="not-found">
@@ -34,6 +35,7 @@ import AdminDashboard from './components/AdminDashboard.vue'
 import ClinicAdminDashboard from './components/ClinicAdminDashboard.vue'
 import RegisterClinic from './components/RegisterClinic.vue'
 import DoctorDashboard from './components/DoctorDashboard.vue'
+import PatientDashboard from './components/PatientDashboard.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -54,7 +56,13 @@ const handleRouteGuard = async () => {
   console.log('Route guard - Token:', !!token, 'Role:', role, 'Path:', currentPath)
 
   // Rutas que requieren autenticación
-  const protectedRoutes = ['/servicios-clinicos', '/admin-dashboard', '/clinic-admin-dashboard', '/doctor-dashboard']
+  const protectedRoutes = [
+    '/servicios-clinicos', 
+    '/admin-dashboard', 
+    '/clinic-admin-dashboard', 
+    '/doctor-dashboard', 
+    '/patient-dashboard'
+  ]
   
   // Rutas públicas (solo para usuarios no autenticados)
   const publicRoutes = ['/login', '/register', '/register-clinic']
@@ -80,8 +88,8 @@ const handleRouteGuard = async () => {
       console.log('Redirigiendo doctor a dashboard')
       router.push('/doctor-dashboard')
     } else {
-      console.log('Redirigiendo usuario regular a servicios')
-      router.push('/servicios-clinicos')
+      console.log('Redirigiendo paciente/usuario regular a patient dashboard')
+      router.push('/patient-dashboard')
     }
     return
   }
@@ -90,29 +98,47 @@ const handleRouteGuard = async () => {
   if (token && protectedRoutes.includes(currentPath)) {
     // Admin dashboard - solo rol 1
     if (currentPath === '/admin-dashboard' && role !== '1') {
-      console.log('Sin permisos de admin general, redirigiendo a home')
-      router.push('/')
+      console.log('Sin permisos de admin general, redirigiendo a dashboard apropiado')
+      redirectToAppropriateRoute(role)
       return
     }
     
     // Clinic admin dashboard - solo rol 2  
     if (currentPath === '/clinic-admin-dashboard' && role !== '2') {
-      console.log('Sin permisos de admin de clínica, redirigiendo a home')
-      router.push('/')
+      console.log('Sin permisos de admin de clínica, redirigiendo a dashboard apropiado')
+      redirectToAppropriateRoute(role)
       return
     }
     
     // Doctor dashboard - solo rol 3
     if (currentPath === '/doctor-dashboard' && role !== '3') {
-      console.log('Sin permisos de doctor, redirigiendo a home')
-      router.push('/')
+      console.log('Sin permisos de doctor, redirigiendo a dashboard apropiado')
+      redirectToAppropriateRoute(role)
       return
     }
     
-    // Servicios clínicos - cualquier usuario autenticado puede acceder
+    // Servicios clínicos - usuarios regulares y pacientes
     if (currentPath === '/servicios-clinicos') {
       console.log('Acceso a servicios clínicos permitido')
     }
+
+    // Patient dashboard - para pacientes o usuarios regulares
+    if (currentPath === '/patient-dashboard') {
+      console.log('Acceso a patient dashboard permitido')
+    }
+  }
+}
+
+// Función auxiliar para redirigir al dashboard apropiado
+const redirectToAppropriateRoute = (role) => {
+  if (role === '1') {
+    router.push('/admin-dashboard')
+  } else if (role === '2') {
+    router.push('/clinic-admin-dashboard')
+  } else if (role === '3') {
+    router.push('/doctor-dashboard')
+  } else {
+    router.push('/patient-dashboard')
   }
 }
 
@@ -134,6 +160,10 @@ onMounted(() => {
 </script>
 
 <style>
+.main-content {
+  min-height: calc(100vh - 80px); /* Ajustar según la altura del header */
+}
+
 .not-found {
   display: flex;
   flex-direction: column;

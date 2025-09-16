@@ -201,8 +201,8 @@ const handleSubmit = async (e) => {
           console.log('Navegando a doctor dashboard')
           await router.push('/doctor-dashboard')
         } else {
-          console.log('Navegando a servicios clínicos')
-          await router.push('/servicios-clinicos')
+          console.log('Navegando a Patient_dashboard')
+          await router.push('/patient-dashboard')
         }
       }, 300)
     } else {

@@ -3,8 +3,8 @@
   <header :class="styles.header">
     <!-- Logo -->
     <div :class="styles.logo">
-      <router-link to="/">
-        <h1>HealthConnect</h1>
+      <router-link to="../Assets/logo.png">
+        <h1>Medic Connect</h1>
       </router-link>
     </div>
     
@@ -156,8 +156,7 @@ const handleLogout = () => {
   // Limpiar localStorage
   localStorage.removeItem('token')
   localStorage.removeItem('userRole')
-  localStorage.removeItem('userData') // Si tienes más datos
-  
+  localStorage.removeItem('userData') 
   // Actualizar estado local
   authToken.value = null
   currentUserRole.value = null
