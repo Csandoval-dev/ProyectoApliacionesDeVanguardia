@@ -1,25 +1,43 @@
+/* Header Profesional CSS */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background-color: #f8f9fa;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-bottom: 1px solid #e9ecef;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   position: sticky;
   top: 0;
   z-index: 1000;
   width: 100%;
+  min-height: 70px;
+  backdrop-filter: blur(10px);
 }
 
 .logo {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.logoImage {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
 }
 
 .logo h1 {
-  font-size: 1.5rem;
-  color: #007bff;
+  font-size: 1.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0;
+  letter-spacing: -0.5px;
 }
 
 .navigation ul {
@@ -27,117 +45,277 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  gap: 2rem;
 }
 
 .navigation li {
-  margin: 0 15px;
+  position: relative;
 }
 
 .navigation a {
   text-decoration: none;
-  color: #343a40;
+  color: #495057;
   font-weight: 500;
-  transition: color 0.3s;
+  font-size: 0.95rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: inline-block;
+}
+
+.navigation a::before {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-50%);
 }
 
 .navigation a:hover {
   color: #007bff;
+  background-color: rgba(0, 123, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.navigation a:hover::before {
+  width: 80%;
+}
+
+.navigation a.router-link-active,
+.navigation a.router-link-exact-active {
+  color: #007bff;
+  font-weight: 600;
+  background-color: rgba(0, 123, 255, 0.08);
+}
+
+.navigation a.router-link-active::before,
+.navigation a.router-link-exact-active::before {
+  width: 80%;
 }
 
 .buttons {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
+}
+
+.serviceBtn,
+.loginBtn,
+.registerBtn,
+.logoutBtn {
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.25px;
 }
 
 .serviceBtn {
-  background-color: #007bff;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
   color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
 .serviceBtn:hover {
-  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.4);
 }
 
 .loginBtn {
   background-color: transparent;
   color: #007bff;
-  border: 1px solid #007bff;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s;
+  border: 1.5px solid #007bff;
+  position: relative;
+}
+
+.loginBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
 }
 
 .loginBtn:hover {
-  background-color: rgba(0, 123, 255, 0.1);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.loginBtn:hover::before {
+  width: 100%;
 }
 
 .registerBtn {
-  background-color: #28a745;
+  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
   color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.3s;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
 }
 
 .registerBtn:hover {
-  background-color: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(40, 167, 69, 0.4);
 }
 
 .logoutBtn {
-  background-color: #dc3545;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
   color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.3s;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
 }
 
 .logoutBtn:hover {
-  background-color: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.4);
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  margin-right: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: rgba(0, 123, 255, 0.05);
+  border-radius: 25px;
+  border: 1px solid rgba(0, 123, 255, 0.1);
+}
+
+.welcomeText {
+  font-size: 0.9rem;
+  color: #495057;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Estados activos */
+.serviceBtn.active,
+.loginBtn.active,
+.registerBtn.active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+/* Animaciones de entrada */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.navigation ul li {
+  animation: slideIn 0.3s ease-out;
+}
+
+.navigation ul li:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.navigation ul li:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.navigation ul li:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .header {
+    padding: 1rem 1.5rem;
+  }
+  
+  .navigation ul {
+    gap: 1.5rem;
+  }
 }
 
 @media (max-width: 768px) {
   .header {
     flex-direction: column;
     padding: 1rem;
+    min-height: auto;
   }
 
   .logo {
     justify-content: center;
     width: 100%;
     text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .logo h1 {
+    font-size: 1.5rem;
   }
 
   .navigation {
     width: 100%;
     text-align: center;
-    margin: 1rem 0;
+    margin-bottom: 1rem;
   }
 
   .navigation ul {
     flex-direction: column;
+    gap: 0.5rem;
   }
 
-  .navigation li {
-    margin: 10px 0;
+  .navigation a {
+    padding: 0.75rem;
+    border-radius: 8px;
+    width: 100%;
+    text-align: center;
   }
 
   .buttons {
     width: 100%;
     justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .serviceBtn,
+  .loginBtn,
+  .registerBtn,
+  .logoutBtn {
+    flex: 1;
+    min-width: 120px;
+    max-width: 200px;
+  }
+
+  .userInfo {
+    order: -1;
+    margin: 0 0 1rem 0;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 0.75rem;
+  }
+
+  .logo h1 {
+    font-size: 1.25rem;
+  }
+
+  .buttons {
+    flex-direction: column;
+    width: 100%;
   }
 
   .serviceBtn,
@@ -145,85 +323,37 @@
   .registerBtn,
   .logoutBtn {
     width: 100%;
-    max-width: 200px;
-    margin: 5px 0;
-
-
+    max-width: none;
   }
-  .navigation ul li a.router-link-active,
-.navigation ul li a.router-link-exact-active {
-  color: #007bff;
-  font-weight: 600;
-  border-bottom: 2px solid #007bff;
-  background-color: rgba(0, 123, 255, 0.1);
 }
 
-/* Estilos para botones activos */
-.serviceBtn.active,
-.loginBtn.active,
-.registerBtn.active {
-  background-color: #007bff;
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+/* Estados de foco para accesibilidad */
+.navigation a:focus,
+.serviceBtn:focus,
+.loginBtn:focus,
+.registerBtn:focus,
+.logoutBtn:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
 }
 
-/* Información del usuario */
-.userInfo {
-  display: flex;
-  align-items: center;
-  margin-right: 1rem;
-}
-
-.welcomeText {
-  font-size: 0.9rem;
-  color: #666;
-  font-weight: 500;
-}
-
-/* Transiciones suaves */
-.navigation ul li a,
-.serviceBtn,
-.loginBtn,
-.registerBtn,
-.logoutBtn {
-  transition: all 0.3s ease;
-}
-
-/* Hover states mejorados */
-.navigation ul li a:hover {
-  color: #007bff;
-  background-color: rgba(0, 123, 255, 0.05);
-}
-
-.serviceBtn:hover,
-.loginBtn:hover,
-.registerBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.logoutBtn:hover {
-  background-color: #dc3545;
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
+/* Mejoras para modo oscuro del sistema */
+@media (prefers-color-scheme: dark) {
+  .header {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
+    border-bottom-color: #4a5568;
+  }
+  
+  .navigation a {
+    color: #e2e8f0;
+  }
+  
+  .welcomeText {
+    color: #cbd5e0;
+  }
+  
   .userInfo {
-    display: none; /* Ocultar texto de bienvenida en móviles */
+    background-color: rgba(0, 123, 255, 0.1);
+    border-color: rgba(0, 123, 255, 0.2);
   }
-  
-  .navigation ul {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .buttons {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-}
 }

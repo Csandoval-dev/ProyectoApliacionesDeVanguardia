@@ -341,17 +341,24 @@ const createAppointment = async (req, res) => {
         // Enviar notificación (implementar según tus necesidades)
         // await enviarNotificacionCitaCreada(paciente, cita, medico);
         
+     // Reemplazar el final del método createAppointment en patient.controller.js
+// Desde donde dice "console.log('Cita creada exitosamente:', nuevaCita.id_cita);" hasta el final
+
         console.log('Cita creada exitosamente:', nuevaCita.id_cita);
         
         res.status(201).json({
             message: 'Cita agendada exitosamente',
             cita: {
                 ...nuevaCita,
+                id_usuario: id_usuario,
                 doctor_info: medicoResult.rows[0],
                 paciente_nombre: nombre_paciente,
                 paciente_email: email_paciente
             }
         });
+        
+        console.log('ID de usuario a devolver:', id_usuario);
+        console.log('Datos de la cita creada:', nuevaCita);
         
     } catch (error) {
         console.error('Error en createAppointment:', error);
@@ -363,6 +370,160 @@ const createAppointment = async (req, res) => {
         
         res.status(500).json({ 
             message: 'Error creando la cita', 
+            error: error.message 
+        });
+    }
+};
+
+// FUNCIÓN CORREGIDA: Obtener citas de un paciente por email
+const getPatientAppointments = async (req, res) => {
+    try {
+        const { email } = req.params;
+        const { estado, limite } = req.query;
+        
+        console.log('=== GET PATIENT APPOINTMENTS ===');
+        console.log('Email:', email, 'Estado filtro:', estado, 'Límite:', limite);
+        
+        if (!email) {
+            return res.status(400).json({ message: 'Email del paciente requerido' });
+        }
+        
+        // Validar formato de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: 'Formato de email inválido' });
+        }
+        
+        let query = `
+            SELECT 
+                c.id_cita,
+                c.fecha_hora,
+                c.estado,
+                m.nombre as doctor_nombre,
+                e.nombre as especialidad,
+                cl.nombre as clinica_nombre,
+                cl.direccion as clinica_direccion,
+                cl.telefono as clinica_telefono,
+                cl.tipo as clinica_tipo,
+                u.nombre as paciente_nombre
+            FROM cita c
+            JOIN usuario u ON c.id_usuario = u.id_usuario
+            JOIN medico m ON c.id_medico = m.id_medico
+            JOIN especialidad e ON m.id_especialidad = e.id_especialidad
+            JOIN clinica cl ON m.id_clinica = cl.id_clinica
+            WHERE u.email = $1
+        `;
+        
+        let params = [email];
+        let paramIndex = 2;
+        
+        // Filtrar por estado si se proporciona
+        if (estado && estado.trim() !== '') {
+            query += ` AND c.estado = $${paramIndex}`;
+            params.push(estado);
+            paramIndex++;
+        }
+        
+        query += ` ORDER BY c.fecha_hora DESC`;
+        
+        // Aplicar límite si se proporciona
+        if (limite && !isNaN(parseInt(limite))) {
+            query += ` LIMIT $${paramIndex}`;
+            params.push(parseInt(limite));
+        }
+        
+        const result = await db.query(query, params);
+        
+        // Categorizar citas por estado y fecha
+        const now = new Date();
+        const citas = result.rows.map(cita => {
+            const fechaCita = new Date(cita.fecha_hora);
+            let categoria = 'programada';
+            
+            if (cita.estado === 'cancelada') {
+                categoria = 'cancelada';
+            } else if (cita.estado === 'completada') {
+                categoria = 'completada';
+            } else if (fechaCita < now) {
+                categoria = 'pasada';
+            } else {
+                categoria = 'programada';
+            }
+            
+            return {
+                ...cita,
+                categoria,
+                // Agregamos created_at usando fecha_hora para compatibilidad con frontend
+                created_at: cita.fecha_hora
+            };
+        });
+        
+        console.log(`Citas encontradas: ${citas.length}`);
+        res.json(citas);
+        
+    } catch (error) {
+        console.error('Error en getPatientAppointments:', error);
+        res.status(500).json({ 
+            message: 'Error obteniendo citas del paciente', 
+            error: error.message 
+        });
+    }
+};
+
+// Obtener estadísticas del paciente
+const getPatientStats = async (req, res) => {
+    try {
+        const { email } = req.params;
+        
+        console.log('=== GET PATIENT STATS ===');
+        console.log('Email:', email);
+        
+        if (!email) {
+            return res.status(400).json({ message: 'Email del paciente requerido' });
+        }
+        
+        const statsResult = await db.query(`
+            SELECT 
+                COUNT(*) as total_citas,
+                COUNT(CASE WHEN estado = 'completada' THEN 1 END) as citas_completadas,
+                COUNT(CASE WHEN estado = 'cancelada' THEN 1 END) as citas_canceladas,
+                COUNT(CASE WHEN estado = 'pendiente' AND fecha_hora > NOW() THEN 1 END) as citas_programadas,
+                COUNT(CASE WHEN estado != 'cancelada' AND fecha_hora < NOW() AND estado != 'completada' THEN 1 END) as citas_perdidas
+            FROM cita c
+            JOIN usuario u ON c.id_usuario = u.id_usuario
+            WHERE u.email = $1
+        `, [email]);
+        
+        const proximaCitaResult = await db.query(`
+            SELECT 
+                c.fecha_hora,
+                m.nombre as doctor_nombre,
+                e.nombre as especialidad,
+                cl.nombre as clinica_nombre
+            FROM cita c
+            JOIN usuario u ON c.id_usuario = u.id_usuario
+            JOIN medico m ON c.id_medico = m.id_medico
+            JOIN especialidad e ON m.id_especialidad = e.id_especialidad
+            JOIN clinica cl ON m.id_clinica = cl.id_clinica
+            WHERE u.email = $1 
+            AND c.estado = 'pendiente' 
+            AND c.fecha_hora > NOW()
+            ORDER BY c.fecha_hora ASC
+            LIMIT 1
+        `, [email]);
+        
+        const stats = statsResult.rows[0];
+        const proximaCita = proximaCitaResult.rows[0] || null;
+        
+        res.json({
+            ...stats,
+            proxima_cita: proximaCita
+        });
+        
+    } catch (error) {
+        console.error('Error en getPatientStats:', error);
+        res.status(500).json({ 
+            message: 'Error obteniendo estadísticas', 
             error: error.message 
         });
     }
@@ -412,6 +573,171 @@ const searchClinics = async (req, res) => {
             message: 'Error en la búsqueda', 
             error: error.message 
         });
+        
+    }
+};
+
+// FUNCIÓN CORREGIDA: Obtener citas del usuario logueado (sin necesidad de email en URL)
+const getMyAppointments = async (req, res) => {
+    try {
+        const userId = req.user?.id_usuario || req.headers['x-user-id'];
+        
+        console.log('=== GET MY APPOINTMENTS ===');
+        console.log('UserID:', userId);
+        
+        if (!userId) {
+            return res.status(400).json({ message: 'ID de usuario requerido' });
+        }
+
+        const result = await db.query(`
+            SELECT 
+                c.id_cita, 
+                c.fecha_hora, 
+                c.estado,
+                m.nombre as doctor_nombre, 
+                e.nombre as especialidad,
+                cl.nombre as clinica_nombre, 
+                cl.direccion as clinica_direccion,
+                cl.telefono as clinica_telefono, 
+                cl.tipo as clinica_tipo,
+                u.nombre as paciente_nombre
+            FROM cita c
+            JOIN usuario u ON c.id_usuario = u.id_usuario
+            JOIN medico m ON c.id_medico = m.id_medico
+            JOIN especialidad e ON m.id_especialidad = e.id_especialidad
+            JOIN clinica cl ON m.id_clinica = cl.id_clinica
+            WHERE c.id_usuario = $1
+            ORDER BY c.fecha_hora DESC
+        `, [userId]);
+
+        const now = new Date();
+        const citas = result.rows.map(cita => {
+            const fechaCita = new Date(cita.fecha_hora);
+            let categoria = 'programada';
+            
+            if (cita.estado === 'cancelada') categoria = 'cancelada';
+            else if (cita.estado === 'completada') categoria = 'completada';
+            else if (fechaCita < now) categoria = 'pasada';
+            
+            return { 
+                ...cita, 
+                categoria,
+                // Agregamos created_at usando fecha_hora para compatibilidad con frontend
+                created_at: cita.fecha_hora
+            };
+        });
+
+        console.log(`Citas encontradas para usuario ${userId}: ${citas.length}`);
+        res.json(citas);
+        
+    } catch (error) {
+        console.error('Error en getMyAppointments:', error);
+        res.status(500).json({ message: 'Error obteniendo citas', error: error.message });
+    }
+};
+
+// Estadísticas del usuario logueado
+const getMyStats = async (req, res) => {
+    try {
+        const userId = req.user?.id_usuario || req.headers['x-user-id'];
+        
+        if (!userId) {
+            return res.status(400).json({ message: 'ID de usuario requerido' });
+        }
+
+        const statsResult = await db.query(`
+            SELECT 
+                COUNT(*) as total_citas,
+                COUNT(CASE WHEN estado = 'completada' THEN 1 END) as citas_completadas,
+                COUNT(CASE WHEN estado = 'cancelada' THEN 1 END) as citas_canceladas,
+                COUNT(CASE WHEN estado = 'pendiente' AND fecha_hora > NOW() THEN 1 END) as citas_programadas
+            FROM cita WHERE id_usuario = $1
+        `, [userId]);
+
+        const proximaCitaResult = await db.query(`
+            SELECT c.fecha_hora, m.nombre as doctor_nombre, e.nombre as especialidad, cl.nombre as clinica_nombre
+            FROM cita c
+            JOIN medico m ON c.id_medico = m.id_medico
+            JOIN especialidad e ON m.id_especialidad = e.id_especialidad
+            JOIN clinica cl ON m.id_clinica = cl.id_clinica
+            WHERE c.id_usuario = $1 AND c.estado = 'pendiente' AND c.fecha_hora > NOW()
+            ORDER BY c.fecha_hora ASC LIMIT 1
+        `, [userId]);
+
+        res.json({
+            ...statsResult.rows[0],
+            proxima_cita: proximaCitaResult.rows[0] || null
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error obteniendo estadísticas', error: error.message });
+    }
+};
+
+// Endpoint temporal para debug
+const debugUserInfo = async (req, res) => {
+    try {
+        const { email } = req.params;
+        const userId = req.headers['x-user-id'];
+        
+        console.log('=== DEBUG USER INFO ===');
+        console.log('Email recibido:', email);
+        console.log('UserID del header:', userId);
+        console.log('LocalStorage info disponible:', {
+            patient_email: 'Verificar en browser',
+            userId: 'Verificar en browser'
+        });
+        
+        // Buscar usuario por email
+        const userByEmail = await db.query(
+            'SELECT * FROM usuario WHERE email = $1',
+            [email]
+        );
+        
+        // Buscar usuario por ID si está disponible
+        let userById = null;
+        if (userId) {
+            const userByIdResult = await db.query(
+                'SELECT * FROM usuario WHERE id_usuario = $1',
+                [userId]
+            );
+            userById = userByIdResult.rows[0] || null;
+        }
+        
+        // Buscar citas por email
+        const citasByEmail = await db.query(`
+            SELECT COUNT(*) as total_by_email
+            FROM cita c
+            JOIN usuario u ON c.id_usuario = u.id_usuario
+            WHERE u.email = $1
+        `, [email]);
+        
+        // Buscar citas por userId si está disponible
+        let citasByUserId = null;
+        if (userId) {
+            const citasByUserIdResult = await db.query(`
+                SELECT COUNT(*) as total_by_userid
+                FROM cita 
+                WHERE id_usuario = $1
+            `, [userId]);
+            citasByUserId = citasByUserIdResult.rows[0] || null;
+        }
+        
+        res.json({
+            email_param: email,
+            userid_header: userId,
+            user_by_email: userByEmail.rows[0] || null,
+            user_by_id: userById,
+            citas_by_email: citasByEmail.rows[0],
+            citas_by_userid: citasByUserId,
+            recommendations: {
+                localStorage_check: 'Verificar que localStorage.getItem("userId") y localStorage.getItem("patient_email") tengan valores',
+                endpoint_usage: 'Usar /my/appointments si userId está disponible, sino /citas/:email'
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error en debugUserInfo:', error);
+        res.status(500).json({ error: error.message });
     }
 };
 
@@ -422,5 +748,10 @@ module.exports = {
     getDoctorSchedules,
     getAvailableSlots,
     createAppointment,
-    searchClinics
+    searchClinics,
+    getPatientAppointments,
+    getPatientStats,
+    getMyAppointments,
+    getMyStats,
+    debugUserInfo
 };

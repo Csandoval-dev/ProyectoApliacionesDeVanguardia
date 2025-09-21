@@ -11,6 +11,7 @@
       <ClinicAdminDashboard v-else-if="currentRoute === '/clinic-admin-dashboard'" />
       <DoctorDashboard v-else-if="currentRoute === '/doctor-dashboard'" />
       <PatientDashboard v-else-if="currentRoute === '/patient-dashboard'" />
+      <Suscripcion v-else-if="currentRoute === '/suscripcion'" /> 
       
       <!-- Fallback para rutas no encontradas -->
       <div v-else class="not-found">
@@ -36,6 +37,7 @@ import ClinicAdminDashboard from './components/ClinicAdminDashboard.vue'
 import RegisterClinic from './components/RegisterClinic.vue'
 import DoctorDashboard from './components/DoctorDashboard.vue'
 import PatientDashboard from './components/PatientDashboard.vue'
+import Suscripcion from './pages/Suscripcion.vue'
 
 const router = useRouter()
 const route = useRoute()

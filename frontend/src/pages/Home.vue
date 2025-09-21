@@ -176,7 +176,7 @@ import { useRouter } from 'vue-router'
 import HeroSection from '../components/HeroSection.vue'
 import ServicesPreview from '../components/ServicesPreview.vue'
 import CarouselComponent from '../components/Carousel.vue'
-
+import Chatbot from '../components/Chatbot/Chatbot.vue'
 const router = useRouter()
 
 // Contadores animados para estadísticas

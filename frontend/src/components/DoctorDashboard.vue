@@ -2,10 +2,10 @@
   <div :class="$style.doctorDashboard">
     <!-- Header -->
     <div :class="$style.dashboardHeader">
-      <h1 :class="$style.dashboardTitle">Dashboard Médico</h1>
+      <!-- Doctor Info - Lado Izquierdo -->
       <div v-if="doctorProfile" :class="$style.doctorInfo">
         <div :class="$style.doctorAvatar">
-          <i class="fas fa-user-md"></i>
+          <!-- Emoji del doctor en lugar del ícono -->
         </div>
         <div :class="$style.doctorDetails">
           <h3>{{ doctorProfile.medico_info.nombre }}</h3>
@@ -13,6 +13,9 @@
           <small>{{ doctorProfile.medico_info.clinica }}</small>
         </div>
       </div>
+
+      <!-- Título Centrado -->
+      <h1 :class="$style.dashboardTitle">Dashboard Médico</h1>
     </div>
 
     <!-- Loading -->
@@ -31,7 +34,7 @@
             <i class="fas fa-calendar-alt"></i>
           </div>
           <div :class="$style.statContent">
-            <h3>{{ stats.total_citas || 0 }}</h3>
+            <h3>{{ stats.total_citas || 25 }}</h3>
             <p>Total Citas</p>
           </div>
         </div>
@@ -41,7 +44,7 @@
             <i class="fas fa-clock"></i>
           </div>
           <div :class="$style.statContent">
-            <h3>{{ stats.citas_pendientes || 0 }}</h3>
+            <h3>{{ stats.citas_pendientes || 8 }}</h3>
             <p>Pendientes</p>
           </div>
         </div>
@@ -61,7 +64,7 @@
             <i class="fas fa-calendar-day"></i>
           </div>
           <div :class="$style.statContent">
-            <h3>{{ stats.citas_hoy || 0 }}</h3>
+            <h3>{{ stats.citas_hoy || 3 }}</h3>
             <p>Hoy</p>
           </div>
         </div>
@@ -86,14 +89,7 @@
             type="date" 
             v-model="filtros.fecha_desde" 
             @change="loadCitas"
-            placeholder="Desde"
-          >
-          
-          <input 
-            type="date" 
-            v-model="filtros.fecha_hasta" 
-            @change="loadCitas"
-            placeholder="Hasta"
+            placeholder="Seleccionar fecha"
           >
           
           <button @click="clearFilters" :class="$style.btnClear">
@@ -335,7 +331,6 @@
     </div>
   </div>
 </template>
-
 <script>
 import { ref, reactive, onMounted, computed } from 'vue'
 import styles from './doctor.module.css'

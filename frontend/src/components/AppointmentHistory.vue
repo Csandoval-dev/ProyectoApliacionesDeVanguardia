@@ -1,208 +1,176 @@
-<!-- AppointmentHistory.vue - Solo Visualización -->
+<!-- AppointmentHistory.vue - Componente mejorado con diseño profesional -->
 <template>
   <div :class="$style.container">
-    <!-- Header con búsqueda de email -->
     <div :class="$style.header">
-      <h1 :class="$style.title">Consultar Mis Citas Médicas</h1>
-      
-      <div :class="$style.emailSection">
-        <div :class="$style.emailInput">
-          <label for="email">Ingresa tu email para consultar tus citas:</label>
-          <div :class="$style.inputGroup">
-            <input 
-              id="email"
-              v-model="patientEmail" 
-              type="email" 
-              placeholder="tu@email.com"
-              :class="$style.input"
-              @keyup.enter="loadPatientData"
-            />
-            <button 
-              @click="loadPatientData" 
-              :disabled="!isValidEmail || loading"
-              :class="$style.searchBtn"
-            >
-              <span v-if="loading">Consultando...</span>
-              <span v-else">Consultar</span>
-            </button>
-          </div>
-        </div>
+      <h2 :class="$style.title">Mis Citas Médicas</h2>
+      <div :class="$style.headerActions">
+        <button @click="loadAppointments" :class="$style.refreshBtn" :disabled="loading">
+          <span v-if="loading">Actualizando...</span>
+          <span v-else>Actualizar</span>
+        </button>
+        <button @click="$emit('create-appointment')" :class="$style.newAppointmentBtn">
+          Nueva Cita
+        </button>
       </div>
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" :class="$style.loading">
+    <div v-if="loading && !appointments.length" :class="$style.loading">
       <div :class="$style.spinner"></div>
-      <p>Consultando información...</p>
+      <p>Cargando tus citas...</p>
     </div>
 
-    <!-- Error Message -->
-    <div v-if="error" :class="$style.error">
+    <!-- Error State -->
+    <div v-if="error && !appointments.length" :class="$style.error">
       <h3>Error</h3>
       <p>{{ error }}</p>
       <button @click="resetError" :class="$style.btnSecondary">Intentar de nuevo</button>
     </div>
 
-    <!-- Patient Data -->
-    <div v-if="!loading && !error && patientEmail && hasSearched">
-      
-      <!-- Statistics Dashboard -->
-      <div v-if="stats && appointments.length > 0" :class="$style.statsContainer">
-        <h2>Resumen de Citas</h2>
+    <!-- Main Content -->
+    <div v-if="!loading || appointments.length" :class="$style.content">
+      <!-- Información del usuario -->
+      <div v-if="userInfo" :class="$style.userInfo">
+        <p>Citas de: <strong>{{ userInfo.nombre }}</strong> ({{ userInfo.email }})</p>
+      </div>
+
+      <!-- Estadísticas -->
+      <div v-if="stats" :class="$style.statsSection">
+        <h3>Resumen de Citas</h3>
         <div :class="$style.statsGrid">
           <div :class="$style.statCard">
-            <div :class="$style.statNumber">{{ stats.total_citas }}</div>
-            <div :class="$style.statLabel">Total de Citas</div>
+            <div :class="$style.statNumber">{{ stats.total_citas || 0 }}</div>
+            <div :class="$style.statLabel">Total Citas</div>
           </div>
-          <div :class="$style.statCard">
-            <div :class="$style.statNumber">{{ stats.citas_programadas }}</div>
-            <div :class="$style.statLabel">Programadas</div>
-          </div>
-          <div :class="$style.statCard">
-            <div :class="$style.statNumber">{{ stats.citas_completadas }}</div>
+          <div :class="[$style.statCard, $style.completed]">
+            <div :class="$style.statNumber">{{ stats.citas_completadas || 0 }}</div>
             <div :class="$style.statLabel">Completadas</div>
           </div>
-          <div :class="$style.statCard">
-            <div :class="$style.statNumber">{{ stats.citas_canceladas }}</div>
+          <div :class="[$style.statCard, $style.scheduled]">
+            <div :class="$style.statNumber">{{ stats.citas_programadas || 0 }}</div>
+            <div :class="$style.statLabel">Programadas</div>
+          </div>
+          <div :class="[$style.statCard, $style.cancelled]">
+            <div :class="$style.statNumber">{{ stats.citas_canceladas || 0 }}</div>
             <div :class="$style.statLabel">Canceladas</div>
           </div>
         </div>
+      </div>
 
-        <!-- Próxima Cita -->
-        <div v-if="stats.proxima_cita" :class="$style.nextAppointment">
-          <h3>Próxima Cita Programada</h3>
-          <div :class="$style.nextAppointmentContent">
-            <div :class="$style.doctorName">
-              <strong>Dr. {{ stats.proxima_cita.doctor_nombre }}</strong>
-            </div>
-            <div :class="$style.specialty">
-              {{ stats.proxima_cita.especialidad }}
-            </div>
-            <div :class="$style.clinicName">
-              {{ stats.proxima_cita.clinica_nombre }}
-            </div>
-            <div :class="$style.nextAppointmentDate">
-              {{ formatDateTime(stats.proxima_cita.fecha_hora) }}
-            </div>
+      <!-- Próxima Cita -->
+      <div v-if="stats?.proxima_cita" :class="$style.nextAppointment">
+        <h3>Próxima Cita</h3>
+        <div :class="$style.nextAppointmentCard">
+          <div :class="$style.appointmentInfo">
+            <p><strong>Doctor:</strong> {{ stats.proxima_cita.doctor_nombre }}</p>
+            <p><strong>Especialidad:</strong> {{ stats.proxima_cita.especialidad }}</p>
+            <p><strong>Clínica:</strong> {{ stats.proxima_cita.clinica_nombre }}</p>
+            <p><strong>Fecha:</strong> {{ formatDateTime(stats.proxima_cita.fecha_hora) }}</p>
+          </div>
+          <div :class="$style.countdown">
+            <div :class="$style.countdownNumber">{{ daysUntilNext }}</div>
+            <div :class="$style.countdownLabel">días</div>
           </div>
         </div>
       </div>
 
-      <!-- No appointments found -->
-      <div v-if="appointments.length === 0" :class="$style.noAppointments">
-        <h3>No se encontraron citas</h3>
-        <p>No se encontraron citas asociadas al email: <strong>{{ patientEmail }}</strong></p>
-        <p>Verifica que el email sea correcto o agenda tu primera cita.</p>
-        <button @click="$emit('create-appointment')" :class="$style.btnPrimary">
-          Agendar Nueva Cita
-        </button>
+      <!-- Filtros -->
+      <div :class="$style.filters">
+        <div :class="$style.filterGroup">
+          <label>Filtrar por estado:</label>
+          <select v-model="selectedFilter" @change="filterAppointments" :class="$style.select">
+            <option value="">Todas las citas</option>
+            <option value="programada">Programadas</option>
+            <option value="completada">Completadas</option>
+            <option value="cancelada">Canceladas</option>
+            <option value="pasada">Citas Pasadas</option>
+          </select>
+        </div>
+        <div :class="$style.filterGroup">
+          <label>Mostrar:</label>
+          <select v-model="resultsLimit" @change="loadAppointments" :class="$style.select">
+            <option value="">Todas</option>
+            <option value="10">Últimas 10</option>
+            <option value="20">Últimas 20</option>
+            <option value="50">Últimas 50</option>
+          </select>
+        </div>
       </div>
 
-      <!-- Appointments List -->
-      <div v-if="appointments.length > 0" :class="$style.appointmentsList">
+      <!-- Error en actualización (no bloquea la vista) -->
+      <div v-if="error && appointments.length" :class="$style.updateError">
+        <p>{{ error }}</p>
+        <button @click="resetError" :class="$style.btnSecondary">Reintentar</button>
+      </div>
+
+      <!-- Lista de Citas -->
+      <div :class="$style.appointmentsSection">
+        <h3>Historial de Citas ({{ filteredAppointments.length }})</h3>
         
-        <!-- Filters -->
-        <div :class="$style.filtersSection">
-          <h2>Historial de Citas ({{ appointments.length }})</h2>
-          <div :class="$style.filters">
-            <select v-model="selectedStatus" @change="applyFilters" :class="$style.select">
-              <option value="">Todas las citas</option>
-              <option value="programada">Próximas citas</option>
-              <option value="completada">Completadas</option>
-              <option value="cancelada">Canceladas</option>
-              <option value="pasada">Citas pasadas</option>
-            </select>
+        <div v-if="!loading && filteredAppointments.length === 0 && !error" :class="$style.noAppointments">
+          <div :class="$style.emptyState">
+            <div :class="$style.emptyIcon">📅</div>
+            <h4>No tienes citas {{ selectedFilter ? 'con este estado' : 'registradas' }}</h4>
+            <p>{{ selectedFilter ? 'Cambia el filtro para ver otras citas' : 'Agenda tu primera cita médica para comenzar' }}</p>
+            <button v-if="!selectedFilter" @click="$emit('create-appointment')" :class="$style.btnPrimary">
+              Agendar Primera Cita
+            </button>
+            <button v-else @click="clearFilters" :class="$style.btnSecondary">
+              Ver Todas las Citas
+            </button>
           </div>
         </div>
 
-        <!-- Filtered Results Info -->
-        <div v-if="selectedStatus" :class="$style.filterInfo">
-          Mostrando {{ filteredAppointments.length }} cita(s) con estado: 
-          <strong>{{ getStatusLabel(selectedStatus) }}</strong>
-          <button @click="clearFilters" :class="$style.clearFilters">Ver todas</button>
-        </div>
-
-        <!-- Appointments Grid -->
-        <div :class="$style.appointmentsGrid">
+        <div v-else :class="$style.appointmentsList">
           <div 
             v-for="appointment in filteredAppointments" 
             :key="appointment.id_cita"
             :class="[
               $style.appointmentCard,
-              $style[appointment.categoria]
+              $style[appointment.categoria] || $style.default
             ]"
           >
-            <!-- Card Header -->
-            <div :class="$style.cardHeader">
-              <div :class="$style.appointmentStatus">
-                <span :class="[$style.statusBadge, $style[appointment.categoria]]">
-                  {{ getStatusLabel(appointment.categoria) }}
-                </span>
-                <span :class="$style.appointmentId">
-                  Cita #{{ appointment.id_cita }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Appointment Details -->
-            <div :class="$style.cardBody">
+            <div :class="$style.appointmentHeader">
               <div :class="$style.appointmentDate">
-                <div :class="$style.dateTime">
-                  {{ formatDateTime(appointment.fecha_hora) }}
-                </div>
-                <div :class="$style.dayOfWeek">
-                  {{ getDayOfWeek(appointment.fecha_hora) }}
-                </div>
+                <div :class="$style.dateMain">{{ formatDate(appointment.fecha_hora) }}</div>
+                <div :class="$style.dateTime">{{ formatTime(appointment.fecha_hora) }}</div>
               </div>
-
-              <div :class="$style.appointmentInfo">
-                <div :class="$style.doctorInfo">
-                  <strong>Dr. {{ appointment.doctor_nombre }}</strong>
-                  <div :class="$style.specialty">{{ appointment.especialidad }}</div>
-                </div>
-                
-                <div :class="$style.clinicInfo">
-                  <div :class="$style.clinicName">
-                    {{ appointment.clinica_nombre }}
-                    <span :class="[$style.clinicType, $style[appointment.clinica_tipo]]">
-                      {{ appointment.clinica_tipo }}
-                    </span>
-                  </div>
-                  <div :class="$style.clinicAddress">
-                    📍 {{ appointment.clinica_direccion }}
-                  </div>
-                  <div :class="$style.clinicPhone">
-                    📞 {{ appointment.clinica_telefono }}
-                  </div>
-                </div>
+              <div :class="[$style.statusBadge, $style[appointment.categoria] || $style.default]">
+                {{ getStatusLabel(appointment.categoria) }}
               </div>
             </div>
 
-            <!-- Additional Info -->
-            <div :class="$style.cardFooter">
-              <div :class="$style.createdDate">
-                <small>Agendada el: {{ formatDate(appointment.created_at) }}</small>
+            <div :class="$style.appointmentBody">
+              <div :class="$style.doctorInfo">
+                <h4>{{ appointment.doctor_nombre }}</h4>
+                <p :class="$style.specialty">{{ appointment.especialidad }}</p>
               </div>
-              <div v-if="appointment.categoria === 'programada'" :class="$style.timeUntil">
-                {{ getTimeUntilAppointment(appointment.fecha_hora) }}
+              
+              <div :class="$style.clinicInfo">
+                <p><strong>Clínica:</strong> {{ appointment.clinica_nombre }}</p>
+                <p><strong>Dirección:</strong> {{ appointment.clinica_direccion }}</p>
+                <p><strong>Teléfono:</strong> {{ appointment.clinica_telefono }}</p>
               </div>
             </div>
+
+
           </div>
         </div>
       </div>
 
-      <!-- Contact Info -->
-      <div v-if="appointments.length > 0" :class="$style.contactInfo">
-        <h3>¿Necesitas hacer cambios en tus citas?</h3>
-        <p>Para cancelar o reagendar una cita, contacta directamente con la clínica correspondiente utilizando los teléfonos mostrados en cada cita.</p>
-        <p><strong>Recuerda:</strong> Es recomendable contactar con al menos 24 horas de anticipación.</p>
+      <!-- Loading más citas (si está cargando en segundo plano) -->
+      <div v-if="loading && appointments.length" :class="$style.backgroundLoading">
+        <div :class="$style.loadingIndicator">
+          <div :class="$style.smallSpinner"></div>
+          <span>Actualizando...</span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
 export default {
   name: 'AppointmentHistory',
@@ -211,109 +179,205 @@ export default {
     // Estados reactivos
     const loading = ref(false)
     const error = ref('')
-    const patientEmail = ref('')
+    const cancellingAppointment = ref(null)
+
+    // Datos
     const appointments = ref([])
     const stats = ref(null)
-    const selectedStatus = ref('')
-    const hasSearched = ref(false)
+    const userInfo = ref(null)
+    const selectedFilter = ref('')
+    const resultsLimit = ref('')
 
     // Configuración
     const API_BASE = 'http://localhost:5002/api'
 
     // Computed
-    const isValidEmail = computed(() => {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      return emailRegex.test(patientEmail.value.trim())
-    })
-
     const filteredAppointments = computed(() => {
-      if (!selectedStatus.value) {
+      if (!selectedFilter.value) {
         return appointments.value
       }
-      return appointments.value.filter(apt => apt.categoria === selectedStatus.value)
+      return appointments.value.filter(appointment => 
+        appointment.categoria === selectedFilter.value
+      )
     })
 
-    // API Methods
-    const apiCall = async (url, options = {}) => {
-      try {
-        const response = await fetch(`${API_BASE}${url}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            ...options.headers
-          },
-          ...options
-        })
-        
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.message || 'Error en la solicitud')
-        }
-        
-        return await response.json()
-      } catch (err) {
-        throw new Error(err.message || 'Error de conexión')
-      }
-    }
+    const daysUntilNext = computed(() => {
+      if (!stats.value?.proxima_cita) return 0
+      const nextDate = new Date(stats.value.proxima_cita.fecha_hora)
+      const today = new Date()
+      const diffTime = nextDate.getTime() - today.getTime()
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    })
 
-    const loadPatientData = async () => {
-      if (!isValidEmail.value) {
-        error.value = 'Por favor ingresa un email válido'
-        return
-      }
-
+    // Método principal para cargar citas
+    const loadAppointments = async () => {
       try {
         loading.value = true
         error.value = ''
-        hasSearched.value = true
         
-        const [appointmentsData, statsData] = await Promise.all([
-          apiCall(`/patient/citas/${encodeURIComponent(patientEmail.value)}`),
-          apiCall(`/patient/stats/${encodeURIComponent(patientEmail.value)}`)
-        ])
+        // Intentar obtener información de usuario de diferentes fuentes
+        let userIdentifier = localStorage.getItem('patient_email')
+        let userId = localStorage.getItem('userId')
+        
+        console.log('Información disponible:', { userIdentifier, userId })
+
+        if (!userIdentifier && !userId) {
+          // Mostrar mensaje más útil y permitir continuar
+          error.value = 'No se encontró información de usuario guardada. Puedes:'
+          appointments.value = []
+          stats.value = {
+            total_citas: 0,
+            citas_completadas: 0,
+            citas_programadas: 0,
+            citas_canceladas: 0
+          }
+          userInfo.value = {
+            nombre: 'Usuario',
+            email: 'Sin email guardado'
+          }
+          return
+        }
+
+        let appointmentsData, statsData
+
+        if (userId) {
+          // Usar endpoints con userId (más eficiente)
+          console.log('Usando endpoints con userId:', userId)
+          
+          let appointmentsUrl = '/patient/my/appointments'
+          let statsUrl = '/patient/my/stats'
+          
+          if (resultsLimit.value) {
+            appointmentsUrl += `?limite=${resultsLimit.value}`
+          }
+
+          const headers = {
+            'Content-Type': 'application/json',
+            'X-User-ID': userId
+          }
+
+          const [appointmentsResponse, statsResponse] = await Promise.all([
+            fetch(`${API_BASE}${appointmentsUrl}`, { headers }),
+            fetch(`${API_BASE}${statsUrl}`, { headers })
+          ])
+
+          if (!appointmentsResponse.ok || !statsResponse.ok) {
+            throw new Error('Error obteniendo datos del servidor')
+          }
+
+          appointmentsData = await appointmentsResponse.json()
+          statsData = await statsResponse.json()
+
+        } else if (userIdentifier) {
+          // Usar endpoints legacy con email
+          console.log('Usando endpoints legacy con email:', userIdentifier)
+          
+          let appointmentsUrl = `/patient/citas/${userIdentifier}`
+          let statsUrl = `/patient/citas/${userIdentifier}/stats`
+          
+          if (resultsLimit.value) {
+            appointmentsUrl += `?limite=${resultsLimit.value}`
+          }
+
+          const [appointmentsResponse, statsResponse] = await Promise.all([
+            fetch(`${API_BASE}${appointmentsUrl}`),
+            fetch(`${API_BASE}${statsUrl}`)
+          ])
+
+          if (!appointmentsResponse.ok || !statsResponse.ok) {
+            throw new Error('Error obteniendo datos del servidor')
+          }
+
+          appointmentsData = await appointmentsResponse.json()
+          statsData = await statsResponse.json()
+        }
         
         appointments.value = appointmentsData
         stats.value = statsData
         
+        // Establecer información del usuario
+        if (appointmentsData.length > 0) {
+          userInfo.value = {
+            nombre: appointmentsData[0].paciente_nombre,
+            email: userIdentifier
+          }
+        }
+
+        console.log('Citas cargadas exitosamente:', appointmentsData.length)
+        
       } catch (err) {
+        console.error('Error en loadAppointments:', err)
         error.value = err.message
-        appointments.value = []
-        stats.value = null
+        
+        // No limpiar los datos existentes si es un error de actualización
+        if (!appointments.value.length) {
+          appointments.value = []
+          stats.value = null
+        }
       } finally {
         loading.value = false
       }
     }
 
-    // Filter Methods
-    const applyFilters = () => {
-      // Los filtros se aplican automáticamente a través del computed
+    const cancelAppointment = async (appointmentId) => {
+      if (!confirm('¿Estás seguro que deseas cancelar esta cita? Esta acción no se puede deshacer.')) return
+
+      try {
+        cancellingAppointment.value = appointmentId
+        
+        // Por ahora usar método simple - puedes mejorarlo después
+        const response = await fetch(`${API_BASE}/patient/citas/${appointmentId}/cancel`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.message || 'Error cancelando cita')
+        }
+        
+        // Recargar las citas después de cancelar
+        await loadAppointments()
+        
+      } catch (err) {
+        error.value = `Error cancelando cita: ${err.message}`
+      } finally {
+        cancellingAppointment.value = null
+      }
+    }
+
+    // Métodos de utilidad
+    const filterAppointments = () => {
+      // El filtrado se maneja automáticamente por el computed
     }
 
     const clearFilters = () => {
-      selectedStatus.value = ''
-    }
-
-    // Utility Methods
-    const getStatusLabel = (status) => {
-      const labels = {
-        'programada': 'Programada',
-        'completada': 'Completada',
-        'cancelada': 'Cancelada',
-        'pasada': 'Cita Pasada'
-      }
-      return labels[status] || status
+      selectedFilter.value = ''
+      resultsLimit.value = ''
     }
 
     const formatDate = (dateString) => {
       const date = new Date(dateString)
       return date.toLocaleDateString('es-ES', {
+        weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       })
     }
 
-    const formatDateTime = (dateTimeString) => {
-      const date = new Date(dateTimeString)
+    const formatTime = (dateString) => {
+      const date = new Date(dateString)
+      return date.toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+
+    const formatDateTime = (dateString) => {
+      const date = new Date(dateString)
       return date.toLocaleString('es-ES', {
         weekday: 'long',
         year: 'numeric',
@@ -324,60 +388,57 @@ export default {
       })
     }
 
-    const getDayOfWeek = (dateString) => {
-      const date = new Date(dateString)
-      return date.toLocaleDateString('es-ES', { weekday: 'long' })
-    }
-
-    const getTimeUntilAppointment = (dateTimeString) => {
-      const appointmentDate = new Date(dateTimeString)
-      const now = new Date()
-      const diffInMs = appointmentDate.getTime() - now.getTime()
-      
-      if (diffInMs <= 0) return null
-      
-      const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24))
-      
-      if (diffInDays === 1) {
-        return 'Mañana'
-      } else if (diffInDays < 7) {
-        return `En ${diffInDays} días`
-      } else if (diffInDays < 30) {
-        const weeks = Math.floor(diffInDays / 7)
-        return `En ${weeks} semana${weeks > 1 ? 's' : ''}`
-      } else {
-        const months = Math.floor(diffInDays / 30)
-        return `En ${months} mes${months > 1 ? 'es' : ''}`
+    const getStatusLabel = (categoria) => {
+      const labels = {
+        'programada': 'Programada',
+        'completada': 'Completada',
+        'cancelada': 'Cancelada',
+        'pasada': 'No Asistió'
       }
+      return labels[categoria] || 'Desconocido'
     }
 
     const resetError = () => {
       error.value = ''
+      loadAppointments()
     }
+
+    // Watchers
+    watch(resultsLimit, () => {
+      loadAppointments()
+    })
+
+    // Lifecycle
+    onMounted(() => {
+      loadAppointments()
+    })
 
     return {
       // Estados
       loading,
       error,
-      patientEmail,
+      cancellingAppointment,
+      
+      // Datos
       appointments,
       stats,
-      selectedStatus,
-      hasSearched,
-      
-      // Computed
-      isValidEmail,
+      userInfo,
+      selectedFilter,
+      resultsLimit,
       filteredAppointments,
       
+      // Computed
+      daysUntilNext,
+      
       // Métodos
-      loadPatientData,
-      applyFilters,
+      loadAppointments,
+      cancelAppointment,
+      filterAppointments,
       clearFilters,
-      getStatusLabel,
       formatDate,
+      formatTime,
       formatDateTime,
-      getDayOfWeek,
-      getTimeUntilAppointment,
+      getStatusLabel,
       resetError
     }
   }
@@ -385,105 +446,166 @@ export default {
 </script>
 
 <style module>
+/* Variables CSS */
+:root {
+  --primary-color: #2563eb;
+  --primary-light: #3b82f6;
+  --primary-dark: #1d4ed8;
+  --secondary-color: #64748b;
+  --success-color: #059669;
+  --warning-color: #d97706;
+  --error-color: #dc2626;
+  --background-color: #f8fafc;
+  --surface-color: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f8fafc;
+  padding: 1rem;
+  font-family: 'Inter', 'system-ui', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--background-color);
   min-height: 100vh;
+  line-height: 1.5;
 }
 
 .header {
-  background: linear-gradient(135deg, #059669, #10b981);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: white;
-  padding: 2rem;
-  border-radius: 12px;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+  pointer-events: none;
 }
 
 .title {
-  font-size: 2.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  margin: 0 0 1.5rem 0;
-  text-align: center;
+  margin: 0;
+  letter-spacing: -0.025em;
 }
 
-.emailSection {
+.headerActions {
   display: flex;
-  justify-content: center;
+  gap: 0.75rem;
 }
 
-.emailInput {
-  width: 100%;
-  max-width: 500px;
-}
-
-.emailInput label {
-  display: block;
-  margin-bottom: 0.5rem;
+.refreshBtn, .newAppointmentBtn {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
   font-weight: 500;
-  text-align: center;
-}
-
-.inputGroup {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.input {
-  flex: 1;
-  padding: 0.75rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  font-size: 1rem;
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.input:focus {
-  border-color: white;
-  outline: none;
-}
-
-.searchBtn {
-  padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  font-weight: 500;
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease-in-out;
+  border: 2px solid;
   white-space: nowrap;
 }
 
-.searchBtn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.3);
+.refreshBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.newAppointmentBtn {
+  background: white;
+  color: var(--primary-color);
   border-color: white;
 }
 
-.searchBtn:disabled {
-  opacity: 0.6;
+.refreshBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.newAppointmentBtn:hover {
+  background: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.refreshBtn:disabled {
+  opacity: 0.7;
   cursor: not-allowed;
+  transform: none;
+}
+
+.userInfo {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  border-left: 4px solid var(--primary-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.userInfo p {
+  margin: 0;
+  color: var(--primary-dark);
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .loading, .error {
   text-align: center;
-  padding: 3rem;
-  border-radius: 12px;
+  padding: 3rem 2rem;
+  border-radius: var(--radius-lg);
   margin: 2rem 0;
-  background: white;
+}
+
+.loading {
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border: 2px solid var(--primary-light);
+  color: var(--primary-dark);
 }
 
 .error {
-  border: 2px solid #ef4444;
-  color: #dc2626;
+  background: linear-gradient(135deg, #fef2f2, #fecaca);
+  border: 2px solid var(--error-color);
+  color: var(--error-color);
+}
+
+.updateError {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  border: 1px solid var(--error-color);
+  color: var(--error-color);
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
 }
 
 .spinner {
-  border: 4px solid #f3f4f6;
-  border-top: 4px solid #10b981;
+  border: 4px solid rgba(37, 99, 235, 0.1);
+  border-top: 4px solid var(--primary-color);
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -491,406 +613,528 @@ export default {
   margin: 0 auto 1rem auto;
 }
 
+.smallSpinner {
+  border: 2px solid rgba(37, 99, 235, 0.1);
+  border-top: 2px solid var(--primary-color);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-.statsContainer {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.statsContainer h2 {
-  color: #1f2937;
-  margin-bottom: 1.5rem;
-  text-align: center;
+.statsSection, .nextAppointment, .appointmentsSection {
+  background: var(--surface-color);
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.statsSection h3, .nextAppointment h3, .appointmentsSection h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
-  margin-bottom: 2rem;
 }
 
 .statCard {
-  background: #f8fafc;
-  padding: 1.5rem;
-  border-radius: 8px;
   text-align: center;
-  border: 2px solid #e5e7eb;
+  padding: 1.25rem 1rem;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-color);
+  transition: all 0.2s ease;
+  background: var(--surface-color);
+}
+
+.statCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--secondary-color), var(--secondary-color));
+}
+
+.statCard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.statCard.completed {
+  border-color: var(--success-color);
+  background: linear-gradient(135deg, #f0fdf4, #ffffff);
+}
+
+.statCard.completed::before {
+  background: linear-gradient(90deg, var(--success-color), #10b981);
+}
+
+.statCard.scheduled {
+  border-color: var(--primary-color);
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+}
+
+.statCard.scheduled::before {
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+}
+
+.statCard.cancelled {
+  border-color: var(--error-color);
+  background: linear-gradient(135deg, #fef2f2, #ffffff);
+}
+
+.statCard.cancelled::before {
+  background: linear-gradient(90deg, var(--error-color), #ef4444);
 }
 
 .statNumber {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #10b981;
-  margin-bottom: 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  color: var(--text-primary);
+  line-height: 1;
 }
 
 .statLabel {
-  color: #6b7280;
+  color: var(--text-secondary);
   font-weight: 500;
+  font-size: 0.8rem;
 }
 
-.nextAppointment {
-  background: #ecfdf5;
-  border: 2px solid #10b981;
-  border-radius: 8px;
-  padding: 1.5rem;
-  text-align: center;
-}
-
-.nextAppointment h3 {
-  color: #065f46;
-  margin-bottom: 1rem;
-}
-
-.nextAppointmentContent .doctorName {
-  font-size: 1.3rem;
-  color: #065f46;
-  margin-bottom: 0.5rem;
-}
-
-.nextAppointmentContent .specialty {
-  color: #059669;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-}
-
-.nextAppointmentContent .clinicName {
-  color: #6b7280;
-  margin-bottom: 1rem;
-}
-
-.nextAppointmentDate {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #065f46;
-  background: rgba(16, 185, 129, 0.1);
-  padding: 0.5rem;
-  border-radius: 6px;
-  display: inline-block;
-}
-
-.noAppointments {
-  background: white;
-  border-radius: 12px;
-  padding: 3rem;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.noAppointments h3 {
-  color: #6b7280;
-  margin-bottom: 1rem;
-}
-
-.appointmentsList {
-  background: white;
-  border-radius: 12px;
+.nextAppointmentCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-radius: var(--radius-lg);
+  border-left: 4px solid var(--primary-color);
+  box-shadow: var(--shadow-sm);
 }
 
-.filtersSection {
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #e5e7eb;
+.appointmentInfo p {
+  margin: 0.75rem 0;
+  color: var(--text-primary);
+  font-weight: 500;
 }
 
-.filtersSection h2 {
-  color: #1f2937;
-  margin-bottom: 1rem;
+.appointmentInfo p strong {
+  color: var(--primary-dark);
+}
+
+.countdown {
+  text-align: center;
+  padding: 1rem;
+}
+
+.countdownNumber {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  line-height: 1;
+}
+
+.countdownLabel {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.5rem;
 }
 
 .filters {
-  display: flex;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: var(--surface-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.filterGroup label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
 }
 
 .select {
-  padding: 0.5rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 6px;
-  background: white;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  background: var(--surface-color);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  min-width: 200px;
 }
 
-.filterInfo {
-  background: #f0f9ff;
-  padding: 1rem;
-  border-radius: 6px;
+.select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-secondary);
+}
+
+.emptyIcon {
+  font-size: 4rem;
   margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.emptyState h4 {
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.emptyState p {
+  margin-bottom: 2rem;
+  font-size: 1rem;
+}
+
+.backgroundLoading {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 1000;
+}
+
+.loadingIndicator {
+  background: var(--surface-color);
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
   display: flex;
   align-items: center;
-  gap: 1rem;
-}
-
-.clearFilters {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 0.25rem 0.75rem;
-  border-radius: 4px;
-  cursor: pointer;
+  gap: 0.75rem;
   font-size: 0.9rem;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
 }
 
-.appointmentsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+.btnPrimary {
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  color: white;
+  border: 2px solid var(--primary-color);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.btnPrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+}
+
+.btnSecondary {
+  padding: 0.875rem 2rem;
+  background: var(--surface-color);
+  color: var(--text-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.btnSecondary:hover {
+  background: #f1f5f9;
+  border-color: var(--text-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.appointmentsList {
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
 }
 
 .appointmentCard {
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 1.5rem;
-  background: white;
-  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  background: var(--surface-color);
+  transition: all 0.2s ease;
+  border-left: 4px solid var(--secondary-color);
 }
 
 .appointmentCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .appointmentCard.programada {
-  border-color: #10b981;
-  background: #ecfdf5;
+  border-left-color: var(--primary-color);
 }
 
 .appointmentCard.completada {
-  border-color: #3b82f6;
-  background: #eff6ff;
+  border-left-color: var(--success-color);
 }
 
 .appointmentCard.cancelada {
-  border-color: #ef4444;
-  background: #fef2f2;
+  border-left-color: var(--error-color);
 }
 
 .appointmentCard.pasada {
-  border-color: #f59e0b;
-  background: #fffbeb;
+  border-left-color: var(--warning-color);
 }
 
-.cardHeader {
+.appointmentHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
 }
 
-.appointmentStatus {
+.appointmentDate {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dateMain {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.dateTime {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary-color);
 }
 
 .statusBadge {
   padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  border-radius: 15px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
 }
 
 .statusBadge.programada {
-  background: #10b981;
-  color: white;
+  background: #dbeafe;
+  color: var(--primary-dark);
 }
 
 .statusBadge.completada {
-  background: #3b82f6;
-  color: white;
-}
-
-.statusBadge.cancelada {
-  background: #ef4444;
-  color: white;
-}
-
-.statusBadge.pasada {
-  background: #f59e0b;
-  color: white;
-}
-
-.appointmentId {
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.cardBody {
-  margin-bottom: 1rem;
-}
-
-.appointmentDate {
-  background: rgba(255, 255, 255, 0.5);
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  text-align: center;
-}
-
-.dateTime {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 0.25rem;
-}
-
-.dayOfWeek {
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.appointmentInfo {
-  display: grid;
-  gap: 1rem;
-}
-
-.doctorInfo strong {
-  color: #1f2937;
-  font-size: 1.1rem;
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.specialty {
-  color: #3b82f6;
-  font-weight: 500;
-}
-
-.clinicName {
-  font-weight: 500;
-  color: #1f2937;
-  margin-bottom: 0.25rem;
-}
-
-.clinicType {
-  font-size: 0.7rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 12px;
-  margin-left: 0.5rem;
-}
-
-.clinicType.publica {
   background: #dcfce7;
   color: #166534;
 }
 
-.clinicType.privada {
-  background: #fef3c7;
+.statusBadge.cancelada {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.statusBadge.pasada {
+  background: #fed7aa;
   color: #92400e;
 }
 
-.clinicAddress, .clinicPhone {
-  color: #6b7280;
-  font-size: 0.9rem;
-  margin-bottom: 0.25rem;
+.appointmentBody {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
 }
 
-.cardFooter {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+.doctorInfo h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+  font-size: 1.3rem;
+  font-weight: 700;
 }
 
-.createdDate {
-  color: #9ca3af;
-}
-
-.timeUntil {
-  background: #10b981;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.contactInfo {
-  background: #f0f9ff;
-  border: 2px solid #3b82f6;
-  border-radius: 12px;
-  padding: 2rem;
-  margin-top: 2rem;
-  text-align: center;
-}
-
-.contactInfo h3 {
-  color: #1e40af;
-  margin-bottom: 1rem;
-}
-
-.contactInfo p {
-  color: #1f2937;
-  margin-bottom: 0.5rem;
-}
-
-.btnPrimary, .btnSecondary {
-  padding: 0.75rem 2rem;
-  border-radius: 8px;
-  font-weight: 500;
+.specialty {
+  color: var(--primary-color);
+  font-weight: 600;
   font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 2px solid;
+  margin: 0;
 }
 
-.btnPrimary {
-  background: #10b981;
-  color: white;
-  border-color: #10b981;
+.clinicInfo p {
+  margin: 0.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
-.btnPrimary:hover {
-  background: #059669;
-  border-color: #059669;
+.clinicInfo p strong {
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
-.btnSecondary {
-  background: white;
-  color: #6b7280;
-  border-color: #d1d5db;
-}
+/* Eliminar estilos del botón cancelar y footer */
 
-.btnSecondary:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .appointmentBody {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
 }
 
 @media (max-width: 768px) {
   .container {
-    padding: 10px;
+    padding: 0.75rem;
   }
   
-  .title {
-    font-size: 2rem;
-  }
-  
-  .inputGroup {
+  .header {
     flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+    padding: 1.25rem;
   }
   
-  .appointmentsGrid {
-    grid-template-columns: 1fr;
+  .headerActions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .filters {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
   
-  .cardFooter {
+  .appointmentBody {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .appointmentHeader {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
     align-items: flex-start;
+  }
+  
+  .nextAppointmentCard {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0.75rem;
+  }
+  
+  .statsSection, .nextAppointment, .appointmentsSection {
+    padding: 1.5rem;
+  }
+  
+  .appointmentCard {
+    padding: 1.5rem;
+  }
+  
+  .statCard {
+    padding: 1.5rem 1rem;
+  }
+  
+  .statNumber {
+    font-size: 2.5rem;
+  }
+  
+  .countdownNumber {
+    font-size: 3rem;
+  }
+  
+  .title {
+    font-size: 1.75rem;
+  }
+  
+  .emptyState {
+    padding: 3rem 1rem;
+  }
+  
+  .emptyIcon {
+    font-size: 3rem;
+  }
+}
+
+/* Mejoras de accesibilidad */
+.refreshBtn:focus,
+.newAppointmentBtn:focus,
+.btnPrimary:focus,
+.btnSecondary:focus,
+.cancelBtn:focus,
+.select:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Animaciones suaves */
+* {
+  scroll-behavior: smooth;
+}
+
+.appointmentCard,
+.statCard,
+.nextAppointmentCard {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

@@ -3,9 +3,8 @@
   <header :class="styles.header">
     <!-- Logo -->
     <div :class="styles.logo">
-      <router-link to="../Assets/logo.png">
         <h1>Medic Connect</h1>
-      </router-link>
+  
     </div>
     
     <!-- Navigation -->
@@ -31,6 +30,11 @@
             Contacto
           </router-link>
         </li>
+          <li>
+        <router-link to="/suscripcion" :class="{ 'router-link-active': $route.path === '/suscripcion' }">
+          Suscripción <!--es componente li se agregó-->
+        </router-link>
+      </li>
         
         <!-- Navegación adicional para usuarios autenticados -->
         <template v-if="isAuthenticated">

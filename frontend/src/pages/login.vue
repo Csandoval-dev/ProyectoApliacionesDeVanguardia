@@ -119,7 +119,7 @@
         </div>
         
         <p :class="styles.registerText">
-          ¿No tienes cuenta?{' '}
+          ¿No tienes cuenta?
           <button 
             type="button" 
             :class="styles.registerButton" 

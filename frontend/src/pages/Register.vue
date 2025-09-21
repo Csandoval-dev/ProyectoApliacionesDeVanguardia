@@ -130,7 +130,7 @@
         </template>
 
         <p :class="styles.loginText">
-          ¿Ya tienes una cuenta?{' '}
+          ¿Ya tienes una cuenta?
           <button 
             type="button" 
             :class="styles.loginButton" 

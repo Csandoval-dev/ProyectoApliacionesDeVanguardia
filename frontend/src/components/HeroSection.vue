@@ -7,7 +7,7 @@
         <h1>Gestión Médica Inteligente y Accesible</h1>
         <p>
           Conecta con los mejores especialistas y gestiona tus citas de manera rápida y eficiente.  
-          En <strong>HealthConnect</strong>, ofrecemos una solución moderna para clínicas y pacientes, 
+          En <strong>Medic Connect</strong>, ofrecemos una solución moderna para clínicas y pacientes, 
           optimizando tiempos y mejorando la experiencia en el cuidado de la salud.
         </p>
         <div :class="$style.features">

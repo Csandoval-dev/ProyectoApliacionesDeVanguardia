@@ -7,25 +7,33 @@ const {
     getDoctorSchedules,
     getAvailableSlots,
     createAppointment,
-    searchClinics
+    searchClinics,
+    getPatientAppointments,  
+    getPatientStats,
+    getMyAppointments,
+    getMyStats
 } = require('../controllers/patient.controller');
 
 const router = express.Router();
 
 // Rutas públicas para pacientes (sin autenticación requerida)
-// Ya que según tu documento, el acceso es público para programación de citas
+
+// IMPORTANTE: Las rutas más específicas van ANTES que las genéricas
+// Rutas con /my (para usuario logueado)
+router.get('/my/appointments', getMyAppointments);
+router.get('/my/stats', getMyStats);
 
 // Obtener todas las clínicas disponibles
 router.get('/clinicas', getAvailableClinics);
 
-// Buscar clínicas por término de búsqueda
+// Buscar clínicas por término de búsqueda (ANTES de /clinicas/:id_clinica)
 router.get('/clinicas/search', searchClinics);
-
-// Obtener todas las especialidades disponibles
-router.get('/especialidades', getSpecialties);
 
 // Obtener doctores por clínica (con filtro opcional por especialidad)
 router.get('/clinicas/:id_clinica/doctores', getDoctorsByClinic);
+
+// Obtener todas las especialidades disponibles
+router.get('/especialidades', getSpecialties);
 
 // Obtener horarios de un doctor específico
 router.get('/doctores/:id_medico/horarios', getDoctorSchedules);
@@ -35,5 +43,9 @@ router.get('/doctores/:id_medico/slots/:fecha', getAvailableSlots);
 
 // Crear nueva cita (acceso público)
 router.post('/citas', createAppointment);
+
+// Rutas legacy (por email) - mantener para compatibilidad
+router.get('/citas/:email', getPatientAppointments);
+router.get('/citas/:email/stats', getPatientStats);
 
 module.exports = router;
